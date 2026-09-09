@@ -1,0 +1,2855 @@
+<!DOCTYPE html>
+<html lang="te">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#1a1a2e" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Sermon Notepad" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="description" content="Sermon Notepad with Telugu Bible — write, preach, and study offline." />
+  <link rel="manifest" id="appManifest" />
+  <title>Sermon Notepad | Telugu Bible Integrated</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Telugu:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0f0f1a;
+      --surface: #1a1a2e;
+      --surface2: #16213e;
+      --card: #1f2a44;
+      --border: #2a3a5c;
+      --primary: #4f8cff;
+      --primary-hover: #3a7aef;
+      --accent: #00d4aa;
+      --accent2: #ff6b6b;
+      --text: #e8eef7;
+      --text-muted: #8b9bb4;
+      --success: #2ecc71;
+      --warning: #f39c12;
+      --radius: 14px;
+      --shadow: 0 8px 32px rgba(0,0,0,0.35);
+      --transition: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { height: 100%; }
+    body {
+      font-family: 'Inter', 'Noto Sans Telugu', system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.55;
+      overflow-x: hidden;
+    }
+
+    /* ========== LAYOUT ========== */
+    .app {
+      display: grid;
+      grid-template-columns: 280px 1fr;
+      grid-template-rows: 60px 1fr;
+      height: 100vh;
+      max-height: 100dvh;
+    }
+
+    header {
+      grid-column: 1 / -1;
+      background: linear-gradient(90deg, #1a1a2e, #16213e);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 1.25rem;
+      z-index: 50;
+    }
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 0.7rem;
+      font-weight: 700;
+      font-size: 1.15rem;
+      letter-spacing: -0.02em;
+    }
+    .logo-icon {
+      width: 34px; height: 34px;
+      background: linear-gradient(135deg, var(--primary), var(--accent));
+      border-radius: 10px;
+      display: grid; place-items: center;
+      font-size: 1.1rem;
+    }
+    .header-actions { display: flex; gap: 0.45rem; align-items: center; flex-wrap: wrap; justify-content: flex-end; }
+
+    /* Sidebar */
+    aside {
+      background: var(--surface);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    .sidebar-tabs {
+      display: flex;
+      border-bottom: 1px solid var(--border);
+    }
+    .sidebar-tab {
+      flex: 1;
+      padding: 0.85rem 0.5rem;
+      text-align: center;
+      font-size: 0.85rem;
+      font-weight: 500;
+      cursor: pointer;
+      color: var(--text-muted);
+      border-bottom: 2px solid transparent;
+      transition: var(--transition);
+    }
+    .sidebar-tab.active {
+      color: var(--primary);
+      border-bottom-color: var(--primary);
+      background: rgba(79,140,255,0.08);
+    }
+    .sidebar-content {
+      flex: 1;
+      overflow-y: auto;
+      padding: 0.9rem;
+    }
+    .sidebar-panel { display: none; }
+    .sidebar-panel.active { display: block; }
+
+    /* Main workspace */
+    main {
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      background: var(--bg);
+    }
+    .workspace {
+      flex: 1;
+      overflow-y: auto;
+      padding: 1.25rem 1.5rem 2rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      min-height: 0;
+    }
+
+    /* ========== COMPONENTS ========== */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.55rem 1rem;
+      border-radius: 10px;
+      font-size: 0.875rem;
+      font-weight: 500;
+      border: none;
+      cursor: pointer;
+      transition: var(--transition);
+      white-space: nowrap;
+      font-family: inherit;
+    }
+    .btn-primary {
+      background: var(--primary);
+      color: #fff;
+    }
+    .btn-primary:hover { background: var(--primary-hover); transform: translateY(-1px); }
+    .btn-accent {
+      background: var(--accent);
+      color: #0a1a14;
+      font-weight: 600;
+    }
+    .btn-accent:hover { filter: brightness(1.1); transform: translateY(-1px); }
+    .btn-ghost {
+      background: transparent;
+      color: var(--text-muted);
+      border: 1px solid var(--border);
+    }
+    .btn-ghost:hover { background: var(--card); color: var(--text); }
+    .btn-danger { background: var(--accent2); color: #fff; }
+    .btn-sm { padding: 0.4rem 0.75rem; font-size: 0.8rem; }
+    .btn-icon {
+      width: 36px; height: 36px;
+      padding: 0;
+      display: grid; place-items: center;
+      border-radius: 10px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      color: var(--text);
+      cursor: pointer;
+    }
+    .btn-icon:hover { background: var(--primary); border-color: var(--primary); }
+
+    .input, .select, .textarea {
+      width: 100%;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 0.7rem 0.9rem;
+      color: var(--text);
+      font-size: 0.95rem;
+      font-family: inherit;
+      transition: var(--transition);
+    }
+    .input:focus, .select:focus, .textarea:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(79,140,255,0.2);
+    }
+    .textarea { resize: vertical; min-height: 70px; }
+    label {
+      display: block;
+      font-size: 0.78rem;
+      font-weight: 500;
+      color: var(--text-muted);
+      margin-bottom: 0.35rem;
+      letter-spacing: 0.02em;
+    }
+
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.9rem;
+    }
+    .form-row.three { grid-template-columns: 1fr 1fr 1fr; }
+    .full { grid-column: 1 / -1; }
+
+    /* Toolbar */
+    .toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.35rem;
+      padding: 0.6rem;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+    .toolbar button {
+      width: 34px; height: 34px;
+      border: none;
+      border-radius: 8px;
+      background: transparent;
+      color: var(--text-muted);
+      cursor: pointer;
+      font-size: 0.95rem;
+      display: grid; place-items: center;
+      transition: var(--transition);
+    }
+    .toolbar button:hover, .toolbar button.active {
+      background: var(--card);
+      color: var(--primary);
+    }
+    .toolbar .sep {
+      width: 1px;
+      background: var(--border);
+      margin: 0 0.25rem;
+      align-self: stretch;
+    }
+    .tb-select {
+      background: var(--card);
+      border: 1px solid var(--border);
+      color: var(--text);
+      border-radius: 8px;
+      padding: 0.25rem 0.4rem;
+      font-size: 0.78rem;
+      font-family: inherit;
+      height: 32px;
+      max-width: 110px;
+      cursor: pointer;
+    }
+    .tb-select:focus { outline: none; border-color: var(--primary); }
+    .tb-dropdown {
+      position: relative;
+      display: inline-flex;
+    }
+    .tb-drop-btn {
+      width: auto !important;
+      min-width: 34px;
+      height: 34px;
+      padding: 0 0.45rem !important;
+      display: inline-flex !important;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 2px;
+      font-weight: 700;
+      font-size: 0.95rem;
+    }
+    .tb-color-bar {
+      display: block;
+      width: 16px;
+      height: 3px;
+      border-radius: 2px;
+    }
+    .tb-drop-panel {
+      display: none;
+      position: absolute;
+      top: calc(100% + 6px);
+      left: 0;
+      z-index: 30;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 0.55rem;
+      box-shadow: var(--shadow);
+      min-width: 160px;
+    }
+    .tb-dropdown.open .tb-drop-panel { display: block; }
+    .tb-swatches {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 6px;
+    }
+    .tb-swatches button {
+      width: 22px !important;
+      height: 22px !important;
+      border-radius: 50% !important;
+      border: 2px solid rgba(255,255,255,0.2) !important;
+      padding: 0 !important;
+      cursor: pointer;
+    }
+    .tb-swatches button:hover {
+      transform: scale(1.15);
+      border-color: #fff !important;
+    }
+    .tb-no-hl {
+      background: var(--card) !important;
+      color: var(--text-muted) !important;
+      font-size: 0.7rem !important;
+      border-radius: 6px !important;
+      display: grid !important;
+      place-items: center;
+    }
+    #editor a { color: var(--primary); text-decoration: underline; }
+    #editor a.verse-link {
+      color: var(--accent);
+      text-decoration: underline dotted;
+      cursor: pointer;
+      font-weight: 500;
+    }
+    #editor mark.anno-mark {
+      background: rgba(243, 156, 18, 0.28);
+      border-bottom: 2px dashed var(--warning);
+      cursor: pointer;
+      border-radius: 2px;
+      padding: 0 2px;
+    }
+    .anno-popup {
+      position: fixed;
+      z-index: 2500;
+      width: min(320px, 92vw);
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 0.9rem;
+      box-shadow: var(--shadow);
+    }
+    .anno-popup-title {
+      font-weight: 600;
+      margin-bottom: 0.55rem;
+      font-size: 0.95rem;
+    }
+    .anno-popup-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 0.45rem;
+      margin-top: 0.7rem;
+    }
+    #annoCommentInput { min-height: 72px; resize: vertical; }
+    .anno-tooltip {
+      position: fixed;
+      z-index: 2600;
+      max-width: 280px;
+      background: #1f2a44;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 0.55rem 0.75rem;
+      font-size: 0.85rem;
+      color: var(--text);
+      box-shadow: var(--shadow);
+      pointer-events: none;
+      display: none;
+    }
+
+    #editor pre {
+      background: rgba(0,0,0,0.35);
+      padding: 0.7rem 0.9rem;
+      border-radius: 8px;
+      overflow-x: auto;
+      font-family: ui-monospace, monospace;
+      font-size: 0.9em;
+    }
+    #editor hr {
+      border: none;
+      border-top: 1px solid var(--border);
+      margin: 1rem 0;
+    }
+
+    #editor ul.checklist {
+      list-style: none;
+      padding-left: 0.3rem;
+    }
+    #editor ul.checklist li {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.5rem;
+      margin: 0.35em 0;
+    }
+    #editor ul.checklist li::before {
+      content: none;
+    }
+    #editor .task-check {
+      width: 1.1em;
+      height: 1.1em;
+      margin-top: 0.2em;
+      flex-shrink: 0;
+      accent-color: var(--accent);
+      cursor: pointer;
+    }
+    #editor .editor-comment {
+      display: block;
+      margin: 0.7em 0;
+      padding: 0.55em 0.85em;
+      background: rgba(243, 156, 18, 0.12);
+      border-left: 3px solid var(--warning);
+      border-radius: 0 8px 8px 0;
+      color: #f0c674;
+      font-size: 0.92em;
+      font-style: italic;
+    }
+    #editor .editor-comment::before {
+      content: "💬 ";
+      font-style: normal;
+    }
+
+    /* Editor */
+    .editor-wrap {
+      flex: 1 1 auto;
+      min-height: 360px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+    #editor {
+      flex: 1;
+      padding: 1.25rem 1.4rem;
+      min-height: 280px;
+      outline: none;
+      font-size: 1.05rem;
+      line-height: 1.7;
+      overflow-y: auto;
+    }
+    #editor:empty:before {
+      content: attr(data-placeholder);
+      color: var(--text-muted);
+      pointer-events: none;
+    }
+    #editor h1, #editor h2, #editor h3 { margin: 0.8em 0 0.4em; }
+    #editor ul, #editor ol { padding-left: 1.5rem; margin: 0.5em 0; }
+    #editor blockquote {
+      border-left: 3px solid var(--primary);
+      margin: 0.8em 0;
+      padding: 0.4em 1em;
+      background: rgba(79,140,255,0.08);
+      border-radius: 0 8px 8px 0;
+    }
+
+    /* Sermon list cards */
+    .sermon-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 0.9rem 1rem;
+      margin-bottom: 0.7rem;
+      cursor: pointer;
+      transition: var(--transition);
+    }
+    .sermon-card:hover {
+      border-color: var(--primary);
+      transform: translateY(-2px);
+      box-shadow: var(--shadow);
+    }
+    .sermon-card h4 {
+      font-size: 0.95rem;
+      margin-bottom: 0.25rem;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .sermon-meta {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      display: flex;
+      gap: 0.6rem;
+      flex-wrap: wrap;
+    }
+    .badge {
+      display: inline-block;
+      padding: 0.15rem 0.5rem;
+      border-radius: 6px;
+      font-size: 0.7rem;
+      background: rgba(79,140,255,0.15);
+      color: var(--primary);
+    }
+
+    /* Bible panel */
+    .bible-controls {
+      display: grid;
+      gap: 0.6rem;
+      margin-bottom: 0.9rem;
+    }
+    .bible-result {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 0.9rem;
+      max-height: 380px;
+      overflow-y: auto;
+      font-size: 0.92rem;
+      line-height: 1.65;
+    }
+    .verse-line {
+      cursor: pointer;
+      border-radius: 8px;
+      padding: 0.4rem 0.5rem;
+      margin-bottom: 0.4rem;
+      border: 1px solid transparent;
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+      transition: background 0.2s, border-color 0.2s, box-shadow 0.2s;
+    }
+    .verse-line:hover {
+      background: rgba(79,140,255,0.08);
+    }
+    .verse-line.selected {
+      background: rgba(0, 212, 170, 0.16);
+      border-color: var(--accent);
+      box-shadow: inset 3px 0 0 var(--accent);
+    }
+    .verse-line.editing {
+      background: rgba(79,140,255,0.12);
+      border-color: var(--primary);
+    }
+    .verse-line .verse-edit-input {
+      width: 100%;
+      margin-top: 0.35rem;
+      background: var(--card);
+      border: 1px solid var(--primary);
+      border-radius: 8px;
+      color: var(--text);
+      padding: 0.45rem 0.55rem;
+      font-family: inherit;
+      font-size: 0.9rem;
+      resize: vertical;
+      min-height: 56px;
+    }
+    .verse-num {
+      color: var(--primary);
+      font-weight: 600;
+      margin-right: 0.4rem;
+      font-size: 0.8rem;
+    }
+    .insert-btn {
+      margin-top: 0.6rem;
+      width: 100%;
+    }
+    .bible-mode.active {
+      background: var(--primary) !important;
+      color: #fff !important;
+      border-color: var(--primary) !important;
+    }
+    .search-hit {
+      background: rgba(0, 212, 170, 0.18);
+      border-radius: 3px;
+      padding: 0 2px;
+    }
+    .search-match-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 0.7rem 0.8rem;
+      margin-bottom: 0.55rem;
+      cursor: pointer;
+      transition: var(--transition);
+    }
+    .search-match-card:hover {
+      border-color: var(--primary);
+    }
+    .search-match-card .ref {
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: var(--accent);
+      margin-bottom: 0.3rem;
+    }
+    .search-match-card .ctx {
+      font-size: 0.85rem;
+      line-height: 1.55;
+      color: var(--text-muted);
+    }
+    .search-match-card .ctx .hit-verse {
+      color: var(--text);
+    }
+
+    /* Status bar */
+    .status-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.5rem 1.25rem;
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      font-size: 0.78rem;
+      color: var(--text-muted);
+    }
+
+    /* Presenter mode */
+    #presenter {
+      position: fixed;
+      inset: 0;
+      background: #0a0a12;
+      z-index: 1000;
+      display: none;
+      flex-direction: column;
+      color: #fff;
+    }
+    #presenter.active { display: flex; }
+    .presenter-header {
+      padding: 1.2rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+    }
+    .presenter-title { font-size: 1.4rem; font-weight: 600; }
+    .presenter-body {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem;
+      position: relative;
+      overflow: hidden;
+    }
+    .slide {
+      position: absolute;
+      max-width: 900px;
+      width: 90%;
+      text-align: center;
+      opacity: 0;
+      transform: translateY(30px) scale(0.97);
+      transition: all 0.55s cubic-bezier(0.4, 0, 0.2, 1);
+      pointer-events: none;
+    }
+    .slide.active {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+      pointer-events: auto;
+    }
+    .slide h2 {
+      font-size: clamp(1.8rem, 4vw, 2.8rem);
+      margin-bottom: 1rem;
+      line-height: 1.3;
+    }
+    .slide .content {
+      font-size: clamp(1.2rem, 2.5vw, 1.7rem);
+      line-height: 1.6;
+      color: #d0d8e8;
+    }
+    .presenter-nav {
+      padding: 1rem 2rem;
+      display: flex;
+      justify-content: center;
+      gap: 1rem;
+      border-top: 1px solid rgba(255,255,255,0.08);
+    }
+    .presenter-counter {
+      position: absolute;
+      bottom: 1.5rem;
+      right: 2rem;
+      font-size: 0.9rem;
+      opacity: 0.6;
+    }
+
+    /* Toast */
+    .toast {
+      position: fixed;
+      bottom: 1.5rem;
+      left: 50%;
+      transform: translateX(-50%) translateY(100px);
+      background: var(--card);
+      border: 1px solid var(--border);
+      padding: 0.8rem 1.4rem;
+      border-radius: 12px;
+      box-shadow: var(--shadow);
+      z-index: 2000;
+      transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+      font-size: 0.9rem;
+    }
+    .toast.show { transform: translateX(-50%) translateY(0); }
+
+    /* Modal */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.65);
+      z-index: 1500;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 1rem;
+    }
+    .modal-overlay.active { display: flex; }
+    .modal {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 1.5rem;
+      max-width: 420px;
+      width: 100%;
+      box-shadow: var(--shadow);
+    }
+    .modal h3 { margin-bottom: 1rem; font-size: 1.15rem; }
+    .modal-actions { display: flex; gap: 0.6rem; justify-content: flex-end; margin-top: 1.2rem; }
+
+    /* Mobile & Responsive */
+    .menu-btn { display: none; }
+    .overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.45);
+      z-index: 35;
+    }
+    .overlay.show { display: block; }
+
+    @media (max-width: 1100px) {
+      .app { grid-template-columns: 260px 1fr; }
+    }
+
+    /* Toggle / collapsible blocks */
+    #editor .toggle-block {
+      margin: 0.75rem 0;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+      background: var(--card);
+    }
+    #editor .toggle-heading {
+      display: flex;
+      align-items: center;
+      gap: 0.55rem;
+      padding: 0.7rem 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      user-select: none;
+      background: rgba(79,140,255,0.1);
+      border-bottom: 1px solid transparent;
+    }
+    #editor .toggle-arrow {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 1.5rem;
+      height: 1.5rem;
+      color: var(--primary);
+      transition: transform 0.25s ease;
+      flex-shrink: 0;
+      cursor: pointer;
+      font-size: 0.95rem;
+      border-radius: 6px;
+    }
+    #editor .toggle-arrow:hover { background: rgba(79,140,255,0.2); }
+    #editor .toggle-block.collapsed .toggle-arrow {
+      transform: rotate(-90deg);
+    }
+    #editor .toggle-title { flex: 1; outline: none; min-width: 0; }
+    #editor .toggle-block.collapsed .toggle-heading {
+      border-bottom-color: transparent;
+    }
+    #editor .toggle-block:not(.collapsed) .toggle-heading {
+      border-bottom-color: var(--border);
+    }
+    #editor .toggle-body {
+      padding: 0.75rem 0.9rem 0.9rem;
+      display: block;
+    }
+    #editor .toggle-block.collapsed .toggle-body {
+      display: none;
+    }
+
+    @media (max-width: 900px) {
+      .app {
+        grid-template-columns: 1fr;
+        grid-template-rows: 52px 1fr;
+        height: 100dvh;
+        max-height: 100dvh;
+      }
+      header {
+        padding: 0 0.65rem;
+        padding-left: max(0.65rem, env(safe-area-inset-left));
+        padding-right: max(0.65rem, env(safe-area-inset-right));
+      }
+      .logo span { font-size: 0.95rem; }
+      .header-actions { gap: 0.3rem; }
+      .header-actions .btn span.hide-sm { display: none; }
+      .header-actions .btn { padding: 0.4rem 0.55rem; font-size: 0.78rem; }
+      aside {
+        position: fixed;
+        left: 0; top: 52px; bottom: 0;
+        width: min(340px, 90vw);
+        z-index: 40;
+        transform: translateX(-105%);
+        transition: transform 0.3s ease;
+        box-shadow: var(--shadow);
+        padding-bottom: env(safe-area-inset-bottom);
+      }
+      aside.open { transform: translateX(0); }
+      .menu-btn { display: grid; }
+      .form-row, .form-row.three { grid-template-columns: 1fr; }
+      main {
+        display: flex;
+        flex-direction: column;
+        min-height: 0;
+      }
+      .workspace {
+        flex: 1;
+        min-height: 0;
+        padding: 0.65rem 0.75rem 1rem;
+        gap: 0.65rem;
+        display: flex;
+        flex-direction: column;
+      }
+      .workspace > .form-row { flex-shrink: 0; }
+      .toolbar {
+        gap: 0.2rem;
+        padding: 0.45rem;
+        flex-wrap: wrap;
+        flex-shrink: 0;
+        position: sticky;
+        top: 0;
+        z-index: 10;
+      }
+      .toolbar button { width: 34px; height: 34px; font-size: 0.9rem; }
+      .tb-select { max-width: 96px; height: 34px; font-size: 0.72rem; }
+      .editor-wrap {
+        flex: 1 1 auto;
+        min-height: 42vh;
+        display: flex;
+        flex-direction: column;
+      }
+      #editor {
+        flex: 1;
+        padding: 0.9rem;
+        font-size: 1.05rem;
+        min-height: 42vh;
+        line-height: 1.65;
+      }
+      .status-bar {
+        padding: 0.4rem 0.75rem;
+        padding-bottom: max(0.4rem, env(safe-area-inset-bottom));
+        font-size: 0.7rem;
+        flex-shrink: 0;
+      }
+      .presenter-header, .presenter-nav { padding: 0.9rem 1rem; }
+      .slide h2 { font-size: clamp(1.4rem, 5vw, 2.2rem); }
+      .slide .content { font-size: clamp(1.05rem, 3.5vw, 1.4rem); }
+      /* Compact meta fields on mobile */
+      .workspace label { font-size: 0.72rem; margin-bottom: 0.25rem; }
+      .input, .select, .textarea { padding: 0.6rem 0.75rem; font-size: 0.95rem; }
+      .textarea { min-height: 52px; }
+    }
+
+    @media (max-width: 480px) {
+      .header-actions { gap: 0.25rem; }
+      .btn-accent, .btn-primary { padding: 0.38rem 0.5rem; }
+      .workspace { padding: 0.55rem 0.6rem 0.85rem; gap: 0.55rem; }
+      .form-row.three { gap: 0.5rem; }
+      #editor { min-height: 48vh; font-size: 1.02rem; }
+      .editor-wrap { min-height: 48vh; }
+      .toolbar { padding: 0.35rem; }
+    }
+
+    /* Larger touch targets */
+    @media (pointer: coarse) {
+      .toolbar button, .btn-icon { min-width: 36px; min-height: 36px; }
+      .sermon-card { padding: 1rem; }
+      .verse-line { padding: 0.55rem 0.6rem; }
+    }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header>
+      <div class="logo">
+        <button class="btn-icon menu-btn" id="menuBtn" title="Menu">☰</button>
+        <div class="logo-icon">✝</div>
+        <span>Sermon Notepad</span>
+      </div>
+      <div class="header-actions">
+        <button class="btn btn-ghost btn-sm" id="installAppBtn" title="Install on phone" style="display:none">⬇ <span class="hide-sm">Install</span></button>
+        <button class="btn btn-ghost btn-sm" id="backupBtn" title="Backup – choose save location">💾 <span class="hide-sm">Backup</span></button>
+        <button class="btn btn-ghost btn-sm" id="restoreBtn" title="Restore from file">📂 <span class="hide-sm">Restore</span></button>
+        <button class="btn btn-accent" id="preachBtn">🎤 Preach</button>
+        <button class="btn btn-primary" id="saveBtn">💾 Save</button>
+      </div>
+    </header>
+    <div class="overlay" id="sidebarOverlay"></div>
+
+    <aside id="sidebar">
+      <div class="sidebar-tabs">
+        <div class="sidebar-tab active" data-tab="notes">Notes</div>
+        <div class="sidebar-tab" data-tab="bible">Bible</div>
+      </div>
+      <div class="sidebar-content">
+        <!-- Notes Panel -->
+        <div class="sidebar-panel active" id="notesPanel">
+          <button class="btn btn-primary btn-sm" style="width:100%;margin-bottom:0.9rem" id="newSermonBtn">+ New Sermon</button>
+          <div id="sermonList"></div>
+        </div>
+        <!-- Bible Panel -->
+        <div class="sidebar-panel" id="biblePanel">
+          <div class="bible-controls">
+            <!-- Mode tabs -->
+            <div style="display:flex; gap:0.25rem; margin-bottom:0.2rem; flex-wrap:wrap">
+              <button class="btn btn-sm bible-mode active" data-mode="ref" style="flex:1;min-width:52px;padding:0.35rem 0.2rem;font-size:0.72rem">By Ref</button>
+              <button class="btn btn-sm bible-mode" data-mode="word" style="flex:1;min-width:52px;padding:0.35rem 0.2rem;font-size:0.72rem">Word</button>
+              <button class="btn btn-sm bible-mode" data-mode="phrase" style="flex:1;min-width:52px;padding:0.35rem 0.2rem;font-size:0.72rem">Sentence</button>
+              <button class="btn btn-sm bible-mode" data-mode="relative" style="flex:1;min-width:52px;padding:0.35rem 0.2rem;font-size:0.72rem">Relative</button>
+              <button class="btn btn-sm bible-mode" data-mode="themes" style="flex:1;min-width:52px;padding:0.35rem 0.2rem;font-size:0.72rem">Themes</button>
+            </div>
+
+            <!-- Reference mode -->
+            <div id="bibleRefControls">
+              <div>
+                <label>Book</label>
+                <select class="select" id="bibleBook"></select>
+              </div>
+              <div class="form-row" style="grid-template-columns:1fr 1fr; gap:0.5rem">
+                <div>
+                  <label>Chapter</label>
+                  <select class="select" id="bibleChapter"></select>
+                </div>
+                <div>
+                  <label>Verse</label>
+                  <select class="select" id="bibleVerse">
+                    <option value="">All verses</option>
+                  </select>
+                </div>
+              </div>
+              <div style="display:flex; gap:0.4rem; flex-wrap:wrap; align-items:center">
+                <button class="btn btn-primary btn-sm" id="searchBibleBtn" style="flex:1">Load</button>
+                <button class="btn btn-ghost btn-sm" id="prevChapterBtn" title="Previous chapter">◀</button>
+                <button class="btn btn-ghost btn-sm" id="nextChapterBtn" title="Next chapter">▶</button>
+              </div>
+              <div class="form-row" style="grid-template-columns:1fr 1fr; gap:0.5rem; margin-top:0.15rem">
+                <div>
+                  <label>Verse range (optional)</label>
+                  <input type="text" class="input" id="bibleVerseRange" placeholder="e.g. 1-5" />
+                </div>
+                <div style="display:flex;align-items:flex-end">
+                  <button class="btn btn-ghost btn-sm" id="loadVerseRangeBtn" style="width:100%">Load range</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Word / Phrase / Relative search -->
+            <div id="bibleTextSearchControls" style="display:none">
+              <div>
+                <label>Search in book</label>
+                <select class="select" id="bibleSearchBook"></select>
+              </div>
+              <div>
+                <label id="bibleSearchLabel">Word / keyword</label>
+                <input type="text" class="input" id="bibleSearchTerm" placeholder="Type Telugu or English word…" />
+              </div>
+              <div class="form-row" style="grid-template-columns:1fr 1fr; gap:0.5rem">
+                <div>
+                  <label>Scope</label>
+                  <select class="select" id="bibleSearchScope">
+                    <option value="book">Whole book</option>
+                    <option value="chapter">Current chapter only</option>
+                    <option value="bible">Whole Bible</option>
+                  </select>
+                </div>
+                <div id="relativeContextWrap" style="display:none">
+                  <label>Context ±</label>
+                  <select class="select" id="bibleRelativeContext">
+                    <option value="1">1 verse</option>
+                    <option value="2" selected>2 verses</option>
+                    <option value="3">3 verses</option>
+                    <option value="5">5 verses</option>
+                  </select>
+                </div>
+              </div>
+              <button class="btn btn-primary btn-sm" id="bibleTextSearchBtn" style="width:100%">Search</button>
+              <p style="font-size:0.72rem;color:var(--text-muted);margin-top:0.35rem;line-height:1.4">
+                <span id="bibleModeHint">Finds verses containing the word.</span>
+              </p>
+            </div>
+
+            <!-- Themes mode -->
+            <div id="bibleThemesControls" style="display:none">
+              <label>Biblical theme</label>
+              <select class="select" id="bibleThemeSelect"></select>
+              <button class="btn btn-primary btn-sm" id="bibleThemeSearchBtn" style="width:100%;margin-top:0.5rem">Find verses</button>
+              <p style="font-size:0.72rem;color:var(--text-muted);margin-top:0.35rem;line-height:1.4">Searches the whole Bible for theme keywords (Telugu text).</p>
+            </div>
+          </div>
+          <div class="bible-result" id="bibleResult">
+            <p style="color:var(--text-muted);text-align:center;padding:1.5rem 0">Select book & chapter, or switch to Word / Sentence / Relative search</p>
+          </div>
+          <div id="verseActionBar" style="display:none; flex-direction:column; gap:0.4rem; margin-top:0.5rem">
+            <div style="font-size:0.75rem;color:var(--text-muted)" id="verseSelCount">0 verses selected</div>
+            <div style="display:flex; gap:0.35rem; flex-wrap:wrap">
+              <button class="btn btn-primary btn-sm" id="pasteToNotepadBtn" style="flex:1">📋 Paste to notepad</button>
+              <button class="btn btn-ghost btn-sm" id="editSelectedVerseBtn">✏️ Edit</button>
+              <button class="btn btn-ghost btn-sm" id="saveSelectedVersesBtn">💾 Save</button>
+            </div>
+            <div style="display:flex; gap:0.35rem; flex-wrap:wrap">
+              <button class="btn btn-ghost btn-sm" id="insertScriptureBtn" style="flex:1">➕ Insert all shown</button>
+              <button class="btn btn-ghost btn-sm" id="insertRefOnlyBtn">Ref only</button>
+              <button class="btn btn-ghost btn-sm" id="clearVerseSelBtn">Clear sel</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <main>
+      <div class="workspace">
+        <!-- Meta fields -->
+        <div class="form-row">
+          <div class="full">
+            <label>Sermon Title</label>
+            <input type="text" class="input" id="sermonTitle" placeholder="e.g. The Love of God" />
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="full">
+            <label>Theme (two lines)</label>
+            <textarea class="textarea" id="sermonTheme" rows="2" placeholder="First line&#10;Second line"></textarea>
+          </div>
+        </div>
+        <div class="form-row three">
+          <div>
+            <label>Category</label>
+            <input type="text" class="input" id="sermonCategory" placeholder="e.g. Gospel, Teaching" list="catList" />
+            <datalist id="catList">
+              <option value="Gospel"><option value="Teaching"><option value="Prayer"><option value="Pastoral">
+              <option value="Youth"><option value="Family"><option value="Mission">
+            </datalist>
+          </div>
+          <div>
+            <label>Series</label>
+            <input type="text" class="input" id="sermonSeries" placeholder="e.g. Study of John" />
+          </div>
+          <div>
+            <label>Scripture</label>
+            <input type="text" class="input" id="sermonScripture" placeholder="John 3:16" />
+          </div>
+        </div>
+
+        <!-- Toolbar -->
+        <div class="toolbar" id="toolbar">
+          <!-- History -->
+          <button type="button" data-cmd="undo" title="Undo (Ctrl+Z)">↶</button>
+          <button type="button" data-cmd="redo" title="Redo (Ctrl+Y)">↷</button>
+          <span class="sep"></span>
+
+          <!-- Style -->
+          <select class="tb-select" id="tbFormat" title="Paragraph style">
+            <option value="p">Paragraph</option>
+            <option value="h1">Heading 1</option>
+            <option value="h2">Heading 2</option>
+            <option value="h3">Heading 3</option>
+            <option value="h4">Heading 4</option>
+            <option value="blockquote">Quote</option>
+            <option value="pre">Code block</option>
+          </select>
+          <select class="tb-select" id="tbFontSize" title="Font size">
+            <option value="">Size</option>
+            <option value="1">Small</option>
+            <option value="3">Normal</option>
+            <option value="4">Medium</option>
+            <option value="5">Large</option>
+            <option value="6">X-Large</option>
+            <option value="7">Huge</option>
+          </select>
+          <span class="sep"></span>
+
+          <!-- Inline -->
+          <button type="button" data-cmd="bold" title="Bold (Ctrl+B)"><b>B</b></button>
+          <button type="button" data-cmd="italic" title="Italic (Ctrl+I)"><i>I</i></button>
+          <button type="button" data-cmd="underline" title="Underline (Ctrl+U)"><u>U</u></button>
+          <button type="button" data-cmd="strikeThrough" title="Strikethrough"><s>S</s></button>
+          <button type="button" data-cmd="superscript" title="Superscript">X²</button>
+          <button type="button" data-cmd="subscript" title="Subscript">X₂</button>
+          <span class="sep"></span>
+
+          <!-- Colours -->
+          <div class="tb-dropdown" id="textColorDrop">
+            <button type="button" class="tb-drop-btn" title="Text colour">A<span class="tb-color-bar" id="textColorBar" style="background:#e8eef7"></span></button>
+            <div class="tb-drop-panel">
+              <div class="tb-swatches" id="textSwatches">
+                <button type="button" data-fore="#e8eef7" style="background:#e8eef7" title="White"></button>
+                <button type="button" data-fore="#4f8cff" style="background:#4f8cff" title="Blue"></button>
+                <button type="button" data-fore="#00d4aa" style="background:#00d4aa" title="Teal"></button>
+                <button type="button" data-fore="#2ecc71" style="background:#2ecc71" title="Green"></button>
+                <button type="button" data-fore="#f39c12" style="background:#f39c12" title="Orange"></button>
+                <button type="button" data-fore="#fbbf24" style="background:#fbbf24" title="Gold"></button>
+                <button type="button" data-fore="#ff6b6b" style="background:#ff6b6b" title="Red"></button>
+                <button type="button" data-fore="#e91e63" style="background:#e91e63" title="Pink"></button>
+                <button type="button" data-fore="#c084fc" style="background:#c084fc" title="Purple"></button>
+                <button type="button" data-fore="#94a3b8" style="background:#94a3b8" title="Gray"></button>
+                <button type="button" data-fore="#ffffff" style="background:#fff" title="Bright white"></button>
+                <button type="button" data-fore="#000000" style="background:#000" title="Black"></button>
+              </div>
+            </div>
+          </div>
+          <div class="tb-dropdown" id="hlColorDrop">
+            <button type="button" class="tb-drop-btn" title="Highlight">🖍<span class="tb-color-bar" id="hlColorBar" style="background:rgba(243,156,18,0.5)"></span></button>
+            <div class="tb-drop-panel">
+              <div class="tb-swatches" id="hlSwatches">
+                <button type="button" data-back="transparent" class="tb-no-hl" title="None">✕</button>
+                <button type="button" data-back="rgba(79,140,255,0.4)" style="background:#4f8cff" title="Blue"></button>
+                <button type="button" data-back="rgba(0,212,170,0.4)" style="background:#00d4aa" title="Teal"></button>
+                <button type="button" data-back="rgba(46,204,113,0.4)" style="background:#2ecc71" title="Green"></button>
+                <button type="button" data-back="rgba(243,156,18,0.45)" style="background:#f39c12" title="Orange"></button>
+                <button type="button" data-back="rgba(251,191,36,0.45)" style="background:#fbbf24" title="Gold"></button>
+                <button type="button" data-back="rgba(255,107,107,0.4)" style="background:#ff6b6b" title="Red"></button>
+                <button type="button" data-back="rgba(233,30,99,0.35)" style="background:#e91e63" title="Pink"></button>
+                <button type="button" data-back="rgba(192,132,252,0.4)" style="background:#c084fc" title="Purple"></button>
+                <button type="button" data-back="rgba(148,163,184,0.4)" style="background:#94a3b8" title="Gray"></button>
+              </div>
+            </div>
+          </div>
+          <span class="sep"></span>
+
+          <!-- Align -->
+          <button type="button" data-cmd="justifyLeft" title="Align left">⬅</button>
+          <button type="button" data-cmd="justifyCenter" title="Align center">⬌</button>
+          <button type="button" data-cmd="justifyRight" title="Align right">➡</button>
+          <button type="button" data-cmd="justifyFull" title="Justify">⬌⬌</button>
+          <span class="sep"></span>
+
+          <!-- Lists & indent -->
+          <button type="button" data-cmd="insertUnorderedList" title="Bullet list">•</button>
+          <button type="button" data-cmd="insertOrderedList" title="Numbered list">1.</button>
+          <button type="button" data-action="checklist" title="Checklist">☑</button>
+          <button type="button" data-action="toggleList" title="Toggle heading + dropdown body">▾ Toggle</button>
+          <button type="button" data-cmd="outdent" title="Decrease indent">⇤</button>
+          <button type="button" data-cmd="indent" title="Increase indent">⇥</button>
+          <span class="sep"></span>
+
+          <!-- Insert -->
+          <button type="button" data-action="link" title="Link selection to Bible verse">🔗</button>
+          <button type="button" data-action="unlink" title="Remove link">⛓</button>
+          <button type="button" data-action="hr" title="Horizontal line">―</button>
+          <button type="button" data-action="comment" title="Comment on selected text">💬</button>
+          <span class="sep"></span>
+
+          <!-- Clear -->
+          <button type="button" data-cmd="removeFormat" title="Clear formatting">Tx</button>
+          <button type="button" data-action="clearAll" title="Clear all content">⌫</button>
+        </div>
+
+        <!-- Editor -->
+        <div class="editor-wrap">
+          <div id="editor" contenteditable="true" data-placeholder="Write points, outline, and notes here...&#10;&#10;• First point&#10;• Second point&#10;&#10;Each heading or list item becomes a slide in Preach mode."></div>
+        </div>
+
+        <!-- Export row -->
+        <div style="display:flex;gap:0.6rem;flex-wrap:wrap;justify-content:flex-end">
+          <button class="btn btn-ghost" id="exportPdfBtn">📄 Save as PDF</button>
+          <button class="btn btn-ghost" id="exportDocBtn">📝 Save as DOC</button>
+          <button class="btn btn-ghost btn-sm" id="clearBtn">Clear</button>
+        </div>
+      </div>
+
+      <div class="status-bar">
+        <span id="statusText">Ready • New sermon</span>
+        <span id="wordCount">0 words</span>
+      </div>
+    </main>
+  </div>
+
+  <!-- Presenter -->
+  <div id="presenter">
+    <div class="presenter-header">
+      <div class="presenter-title" id="presenterTitle">Sermon</div>
+      <button class="btn btn-ghost" id="exitPresenter">✕ Exit (Esc)</button>
+    </div>
+    <div class="presenter-body" id="presenterBody"></div>
+    <div class="presenter-nav">
+      <button class="btn btn-ghost" id="prevSlide">← Prev</button>
+      <button class="btn btn-primary" id="nextSlide">Next →</button>
+    </div>
+    <div class="presenter-counter" id="slideCounter">1 / 1</div>
+  </div>
+
+  <!-- Inline annotation popup -->
+  <div id="annoPopup" class="anno-popup" style="display:none">
+    <div class="anno-popup-title" id="annoPopupTitle">Comment</div>
+    <div id="annoCommentBody">
+      <textarea id="annoCommentInput" class="input" rows="3" placeholder="Write your comment on the selected text…"></textarea>
+    </div>
+    <div id="annoLinkBody" style="display:none">
+      <label>Book</label>
+      <select class="select" id="annoLinkBook"></select>
+      <div class="form-row" style="grid-template-columns:1fr 1fr;gap:0.5rem;margin-top:0.5rem">
+        <div>
+          <label>Chapter</label>
+          <input type="number" class="input" id="annoLinkChapter" min="1" value="1" />
+        </div>
+        <div>
+          <label>Verse</label>
+          <input type="text" class="input" id="annoLinkVerse" placeholder="16 or 16-18" />
+        </div>
+      </div>
+      <p style="font-size:0.75rem;color:var(--text-muted);margin-top:0.4rem">Selected text will link to this verse.</p>
+    </div>
+    <div class="anno-popup-actions">
+      <button type="button" class="btn btn-ghost btn-sm" id="annoCancelBtn">Cancel</button>
+      <button type="button" class="btn btn-primary btn-sm" id="annoSaveBtn">Save</button>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div class="toast" id="toast"></div>
+
+  <!-- Restore modal -->
+  <div class="modal-overlay" id="restoreModal">
+    <div class="modal">
+      <h3>Restore Backup</h3>
+      <p style="font-size:0.9rem;color:var(--text-muted);margin-bottom:1rem">Choose a previously exported <strong>.json</strong> backup file from any location on your device. Current sermons will be replaced.</p>
+      <input type="file" id="restoreFile" accept=".json,application/json" class="input" />
+      <div class="modal-actions">
+        <button class="btn btn-ghost" id="cancelRestore">Cancel</button>
+        <button class="btn btn-primary" id="confirmRestore">Restore</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Backup info modal -->
+  <div class="modal-overlay" id="backupModal">
+    <div class="modal">
+      <h3>Backup Sermons</h3>
+      <p style="font-size:0.9rem;color:var(--text-muted);margin-bottom:1rem">A JSON file will be downloaded. Your browser will ask you to <strong>choose the folder / location</strong> where you want to save it (Downloads, Desktop, USB, etc.).</p>
+      <div class="modal-actions">
+        <button class="btn btn-ghost" id="cancelBackup">Cancel</button>
+        <button class="btn btn-primary" id="confirmBackup">Choose location & Save</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ========== DATA ==========
+    const BOOKS = [
+      { en: "Genesis", te: "ఆదికాండము", file: "Genesis" },
+      { en: "Exodus", te: "నిర్గమకాండము", file: "Exodus" },
+      { en: "Leviticus", te: "లేవీయకాండము", file: "Leviticus" },
+      { en: "Numbers", te: "సంఖ్యాకాండము", file: "Numbers" },
+      { en: "Deuteronomy", te: "ద్వితీయోపదేశకాండము", file: "Deuteronomy" },
+      { en: "Joshua", te: "యెహోషువ", file: "Joshua" },
+      { en: "Judges", te: "న్యాయాధిపతులు", file: "Judges" },
+      { en: "Ruth", te: "రూతు", file: "Ruth" },
+      { en: "1 Samuel", te: "1 సమూయేలు", file: "1-Samuel" },
+      { en: "2 Samuel", te: "2 సమూయేలు", file: "2-Samuel" },
+      { en: "1 Kings", te: "1 రాజులు", file: "1-Kings" },
+      { en: "2 Kings", te: "2 రాజులు", file: "2-Kings" },
+      { en: "1 Chronicles", te: "1 దినవృత్తాంతములు", file: "1-Chronicles" },
+      { en: "2 Chronicles", te: "2 దినవృత్తాంతములు", file: "2-Chronicles" },
+      { en: "Ezra", te: "ఎజ్రా", file: "Ezra" },
+      { en: "Nehemiah", te: "నెహెమ్యా", file: "Nehemiah" },
+      { en: "Esther", te: "ఎస్తేరు", file: "Esther" },
+      { en: "Job", te: "యోబు", file: "Job" },
+      { en: "Psalms", te: "కీర్తనలు", file: "Psalms" },
+      { en: "Proverbs", te: "సామెతలు", file: "Proverbs" },
+      { en: "Ecclesiastes", te: "ప్రసంగి", file: "Ecclesiastes" },
+      { en: "Song of Solomon", te: "పరమగీతము", file: "Song-of-Solomon" },
+      { en: "Isaiah", te: "యెషయా", file: "Isaiah" },
+      { en: "Jeremiah", te: "యిర్మీయా", file: "Jeremiah" },
+      { en: "Lamentations", te: "విలాపకాండము", file: "Lamentations" },
+      { en: "Ezekiel", te: "యెహెజ్కేలు", file: "Ezekiel" },
+      { en: "Daniel", te: "దానియేలు", file: "Daniel" },
+      { en: "Hosea", te: "హోషేయ", file: "Hosea" },
+      { en: "Joel", te: "యోవేలు", file: "Joel" },
+      { en: "Amos", te: "ఆమోసు", file: "Amos" },
+      { en: "Obadiah", te: "ఓబద్యా", file: "Obadiah" },
+      { en: "Jonah", te: "యోనా", file: "Jonah" },
+      { en: "Micah", te: "మీకా", file: "Micah" },
+      { en: "Nahum", te: "నహూము", file: "Nahum" },
+      { en: "Habakkuk", te: "హబక్కూకు", file: "Habakkuk" },
+      { en: "Zephaniah", te: "జెఫన్యా", file: "Zephaniah" },
+      { en: "Haggai", te: "హగ్గయి", file: "Haggai" },
+      { en: "Zechariah", te: "జెకర్యా", file: "Zechariah" },
+      { en: "Malachi", te: "మలాకీ", file: "Malachi" },
+      { en: "Matthew", te: "మత్తయి", file: "Matthew" },
+      { en: "Mark", te: "మార్కు", file: "Mark" },
+      { en: "Luke", te: "లూకా", file: "Luke" },
+      { en: "John", te: "యోహాను", file: "John" },
+      { en: "Acts", te: "అపొస్తలుల కార్యములు", file: "Acts" },
+      { en: "Romans", te: "రోమీయులకు", file: "Romans" },
+      { en: "1 Corinthians", te: "1 కొరింథీయులకు", file: "1-Corinthians" },
+      { en: "2 Corinthians", te: "2 కొరింథీయులకు", file: "2-Corinthians" },
+      { en: "Galatians", te: "గలతీయులకు", file: "Galatians" },
+      { en: "Ephesians", te: "ఎఫెసీయులకు", file: "Ephesians" },
+      { en: "Philippians", te: "ఫిలిప్పీయులకు", file: "Philippians" },
+      { en: "Colossians", te: "కొలస్సయులకు", file: "Colossians" },
+      { en: "1 Thessalonians", te: "1 థెస్సలొనీకయులకు", file: "1-Thessalonians" },
+      { en: "2 Thessalonians", te: "2 థెస్సలొనీకయులకు", file: "2-Thessalonians" },
+      { en: "1 Timothy", te: "1 తిమోతికి", file: "1-Timothy" },
+      { en: "2 Timothy", te: "2 తిమోతికి", file: "2-Timothy" },
+      { en: "Titus", te: "తీతుకు", file: "Titus" },
+      { en: "Philemon", te: "ఫిలేమోనుకు", file: "Philemon" },
+      { en: "Hebrews", te: "హెబ్రీయులకు", file: "Hebrews" },
+      { en: "James", te: "యాకోబు", file: "James" },
+      { en: "1 Peter", te: "1 పేతురు", file: "1-Peter" },
+      { en: "2 Peter", te: "2 పేతురు", file: "2-Peter" },
+      { en: "1 John", te: "1 యోహాను", file: "1-John" },
+      { en: "2 John", te: "2 యోహాను", file: "2-John" },
+      { en: "3 John", te: "3 యోహాను", file: "3-John" },
+      { en: "Jude", te: "యూదా", file: "Jude" },
+      { en: "Revelation", te: "ప్రకటన", file: "Revelation" }
+    ];
+
+    const BIBLE_BASE = "https://raw.githubusercontent.com/Telugu-Bible/all-books/main/";
+    let sermons = JSON.parse(localStorage.getItem("teluguSermons") || "[]");
+    let currentId = null;
+    let slides = [];
+    let currentSlide = 0;
+    let lastBibleText = "";
+
+    // ========== INIT ==========
+    const bookSelect = document.getElementById("bibleBook");
+    const searchBookSelect = document.getElementById("bibleSearchBook");
+    function fillBookSelect(sel) {
+      const ot = document.createElement("optgroup");
+      ot.label = "Old Testament";
+      const nt = document.createElement("optgroup");
+      nt.label = "New Testament";
+      BOOKS.forEach((b, i) => {
+        const opt = document.createElement("option");
+        opt.value = b.file;
+        opt.textContent = `${b.en} (${b.te})`;
+        if (i < 39) ot.appendChild(opt);
+        else nt.appendChild(opt);
+      });
+      sel.appendChild(ot);
+      sel.appendChild(nt);
+    }
+    fillBookSelect(bookSelect);
+    fillBookSelect(searchBookSelect);
+    bookSelect.value = "John";
+    searchBookSelect.value = "John";
+
+    let bibleMode = "ref"; // ref | word | phrase | relative
+    let lastBibleData = null; // cached book JSON for relative context
+    let lastSearchMatches = [];
+
+    function toast(msg) {
+      const t = document.getElementById("toast");
+      t.textContent = msg;
+      t.classList.add("show");
+      setTimeout(() => t.classList.remove("show"), 2600);
+    }
+
+    function updateWordCount() {
+      const text = document.getElementById("editor").innerText || "";
+      const words = text.trim() ? text.trim().split(/\s+/).length : 0;
+      document.getElementById("wordCount").textContent = words + " words";
+    }
+
+    function setStatus(msg) {
+      document.getElementById("statusText").textContent = msg;
+    }
+
+    // ========== SIDEBAR TABS ==========
+    document.querySelectorAll(".sidebar-tab").forEach(tab => {
+      tab.addEventListener("click", () => {
+        document.querySelectorAll(".sidebar-tab").forEach(t => t.classList.remove("active"));
+        document.querySelectorAll(".sidebar-panel").forEach(p => p.classList.remove("active"));
+        tab.classList.add("active");
+        document.getElementById(tab.dataset.tab + "Panel").classList.add("active");
+      });
+    });
+
+    const sidebar = document.getElementById("sidebar");
+    const overlay = document.getElementById("sidebarOverlay");
+    function closeSidebar() {
+      sidebar.classList.remove("open");
+      overlay.classList.remove("show");
+    }
+    document.getElementById("menuBtn").addEventListener("click", () => {
+      sidebar.classList.toggle("open");
+      overlay.classList.toggle("show", sidebar.classList.contains("open"));
+    });
+    overlay.addEventListener("click", closeSidebar);
+
+    // ========== EDITOR TOOLBAR ==========
+    const editorEl = document.getElementById("editor");
+
+    function focusEditor() {
+      editorEl.focus();
+    }
+
+    function runCmd(cmd, val = null) {
+      focusEditor();
+      try {
+        document.execCommand("styleWithCSS", false, true);
+      } catch (_) {}
+      document.execCommand(cmd, false, val);
+      updateWordCount();
+      updateToolbarState();
+    }
+
+    function insertChecklist() {
+      focusEditor();
+      document.execCommand("insertHTML", false,
+        `<ul class="checklist"><li><input type="checkbox" class="task-check" contenteditable="false"> New task</li></ul><p><br></p>`);
+      updateWordCount();
+    }
+
+    function insertToggleBlock() {
+      focusEditor();
+      const html = `<div class="toggle-block">
+        <div class="toggle-heading"><span class="toggle-arrow" contenteditable="false">▾</span><span class="toggle-title" contenteditable="true">Main heading</span></div>
+        <div class="toggle-body" contenteditable="true"><p>Dropdown text beneath the heading. Add points, outline details, or notes here.</p></div>
+      </div><p><br></p>`;
+      document.execCommand("insertHTML", false, html);
+      updateWordCount();
+    }
+
+    let annoMode = null; // 'comment' | 'link'
+    let savedRange = null;
+
+    function getSelectionRect() {
+      const sel = window.getSelection();
+      if (!sel || sel.rangeCount === 0) return null;
+      const range = sel.getRangeAt(0);
+      if (range.collapsed) return null;
+      // ensure selection is inside editor
+      if (!editorEl.contains(range.commonAncestorContainer)) return null;
+      return range.getBoundingClientRect();
+    }
+
+    function saveSelection() {
+      const sel = window.getSelection();
+      if (!sel || sel.rangeCount === 0 || sel.getRangeAt(0).collapsed) return null;
+      const range = sel.getRangeAt(0);
+      if (!editorEl.contains(range.commonAncestorContainer)) return null;
+      return range.cloneRange();
+    }
+
+    function restoreSelection(range) {
+      if (!range) return;
+      const sel = window.getSelection();
+      sel.removeAllRanges();
+      sel.addRange(range);
+    }
+
+    function positionAnnoPopup(rect) {
+      const popup = document.getElementById("annoPopup");
+      popup.style.display = "block";
+      const pad = 8;
+      let top = rect.bottom + pad;
+      let left = rect.left + rect.width / 2 - 160;
+      left = Math.max(12, Math.min(left, window.innerWidth - 332));
+      if (top + 220 > window.innerHeight) {
+        top = Math.max(12, rect.top - 220);
+      }
+      popup.style.top = top + "px";
+      popup.style.left = left + "px";
+    }
+
+    function hideAnnoPopup() {
+      document.getElementById("annoPopup").style.display = "none";
+      annoMode = null;
+      savedRange = null;
+    }
+
+    function insertComment() {
+      savedRange = saveSelection();
+      if (!savedRange) {
+        toast("Select a word or sentence first");
+        return;
+      }
+      annoMode = "comment";
+      document.getElementById("annoPopupTitle").textContent = "Comment on selection";
+      document.getElementById("annoCommentBody").style.display = "block";
+      document.getElementById("annoLinkBody").style.display = "none";
+      document.getElementById("annoCommentInput").value = "";
+      positionAnnoPopup(savedRange.getBoundingClientRect());
+      setTimeout(() => document.getElementById("annoCommentInput").focus(), 50);
+    }
+
+    function insertLink() {
+      savedRange = saveSelection();
+      if (!savedRange) {
+        toast("Select text to link to a verse");
+        return;
+      }
+      annoMode = "link";
+      document.getElementById("annoPopupTitle").textContent = "Link to Bible verse";
+      document.getElementById("annoCommentBody").style.display = "none";
+      document.getElementById("annoLinkBody").style.display = "block";
+
+      // fill book select once
+      const linkBook = document.getElementById("annoLinkBook");
+      if (!linkBook.options.length) {
+        fillBookSelect(linkBook);
+      }
+      // prefer current Bible selection
+      linkBook.value = bookSelect.value || "John";
+      const ch = document.getElementById("bibleChapter").value || "1";
+      const v = document.getElementById("bibleVerse").value || "";
+      document.getElementById("annoLinkChapter").value = ch;
+      document.getElementById("annoLinkVerse").value = v;
+
+      positionAnnoPopup(savedRange.getBoundingClientRect());
+    }
+
+    function applyAnnotation() {
+      if (!savedRange || !annoMode) {
+        hideAnnoPopup();
+        return;
+      }
+      restoreSelection(savedRange);
+      focusEditor();
+
+      if (annoMode === "comment") {
+        const note = document.getElementById("annoCommentInput").value.trim();
+        if (!note) {
+          toast("Write a comment first");
+          return;
+        }
+        const selected = savedRange.toString();
+        const span = document.createElement("mark");
+        span.className = "anno-mark";
+        span.dataset.comment = note;
+        span.title = note;
+        try {
+          savedRange.surroundContents(span);
+        } catch (_) {
+          // selection spans multiple nodes
+          span.textContent = selected;
+          savedRange.deleteContents();
+          savedRange.insertNode(span);
+        }
+        toast("Comment added");
+      }
+
+      if (annoMode === "link") {
+        const file = document.getElementById("annoLinkBook").value;
+        const ch = document.getElementById("annoLinkChapter").value.trim() || "1";
+        const verse = document.getElementById("annoLinkVerse").value.trim();
+        const bookMeta = BOOKS.find(b => b.file === file);
+        const label = bookMeta ? bookMeta.en : file;
+        const ref = verse ? `${label} ${ch}:${verse}` : `${label} ${ch}`;
+        const href = `#verse:${file}|${ch}|${verse || ""}`;
+
+        const selected = savedRange.toString() || ref;
+        const a = document.createElement("a");
+        a.href = href;
+        a.className = "verse-link";
+        a.dataset.file = file;
+        a.dataset.chapter = ch;
+        a.dataset.verse = verse;
+        a.title = "Open " + ref;
+        a.textContent = selected;
+        savedRange.deleteContents();
+        savedRange.insertNode(a);
+        toast("Linked to " + ref);
+      }
+
+      hideAnnoPopup();
+      updateWordCount();
+    }
+
+    document.getElementById("annoSaveBtn").addEventListener("click", applyAnnotation);
+    document.getElementById("annoCancelBtn").addEventListener("click", hideAnnoPopup);
+    document.getElementById("annoCommentInput").addEventListener("keydown", e => {
+      if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) applyAnnotation();
+      if (e.key === "Escape") hideAnnoPopup();
+    });
+
+    // Click verse links in editor → load Bible
+    editorEl.addEventListener("click", e => {
+      const a = e.target.closest("a.verse-link");
+      if (a) {
+        e.preventDefault();
+        const file = a.dataset.file;
+        const ch = parseInt(a.dataset.chapter) || 1;
+        const verse = a.dataset.verse || "";
+        // switch to Bible tab
+        document.querySelectorAll(".sidebar-tab").forEach(t => t.classList.remove("active"));
+        document.querySelectorAll(".sidebar-panel").forEach(p => p.classList.remove("active"));
+        document.querySelector('.sidebar-tab[data-tab="bible"]').classList.add("active");
+        document.getElementById("biblePanel").classList.add("active");
+        document.querySelectorAll(".bible-mode").forEach(b => b.classList.toggle("active", b.dataset.mode === "ref"));
+        bibleMode = "ref";
+        document.getElementById("bibleRefControls").style.display = "block";
+        document.getElementById("bibleTextSearchControls").style.display = "none";
+        bookSelect.value = file;
+        loadBible(file, ch, verse);
+        toast("Opened " + (a.title || "verse").replace("Open ", ""));
+        return;
+      }
+      const mark = e.target.closest("mark.anno-mark");
+      if (mark && mark.dataset.comment) {
+        // show floating tooltip
+        let tip = document.getElementById("annoTooltip");
+        if (!tip) {
+          tip = document.createElement("div");
+          tip.id = "annoTooltip";
+          tip.className = "anno-tooltip";
+          document.body.appendChild(tip);
+        }
+        tip.textContent = mark.dataset.comment;
+        tip.style.display = "block";
+        const r = mark.getBoundingClientRect();
+        tip.style.top = (r.bottom + 6) + "px";
+        tip.style.left = Math.max(8, r.left) + "px";
+        clearTimeout(tip._hide);
+        tip._hide = setTimeout(() => { tip.style.display = "none"; }, 3500);
+      }
+    });
+
+    function closeAllDrops() {
+      document.querySelectorAll(".tb-dropdown.open").forEach(d => d.classList.remove("open"));
+    }
+
+    document.getElementById("toolbar").addEventListener("click", e => {
+      const dropBtn = e.target.closest(".tb-drop-btn");
+      if (dropBtn) {
+        e.preventDefault();
+        e.stopPropagation();
+        const drop = dropBtn.closest(".tb-dropdown");
+        const wasOpen = drop.classList.contains("open");
+        closeAllDrops();
+        if (!wasOpen) drop.classList.add("open");
+        return;
+      }
+
+      const swatch = e.target.closest("[data-fore], [data-back]");
+      if (swatch) {
+        e.preventDefault();
+        if (swatch.dataset.fore) {
+          runCmd("foreColor", swatch.dataset.fore);
+          document.getElementById("textColorBar").style.background = swatch.dataset.fore;
+        } else if (swatch.dataset.back !== undefined) {
+          if (swatch.dataset.back === "transparent") {
+            // strip background from selection via removeFormat is too aggressive; use hilite transparent
+            runCmd("hiliteColor", "transparent");
+            try { document.execCommand("backColor", false, "transparent"); } catch (_) {}
+          } else {
+            runCmd("hiliteColor", swatch.dataset.back);
+            try { document.execCommand("backColor", false, swatch.dataset.back); } catch (_) {}
+          }
+          document.getElementById("hlColorBar").style.background =
+            swatch.dataset.back === "transparent" ? "transparent" : swatch.dataset.back;
+        }
+        closeAllDrops();
+        return;
+      }
+
+      const btn = e.target.closest("button[data-cmd], button[data-action]");
+      if (!btn) return;
+      e.preventDefault();
+      closeAllDrops();
+
+      if (btn.dataset.action === "checklist") { insertChecklist(); return; }
+      if (btn.dataset.action === "toggleList") { insertToggleBlock(); return; }
+      if (btn.dataset.action === "comment") { insertComment(); return; }
+      if (btn.dataset.action === "link") { insertLink(); return; }
+      if (btn.dataset.action === "unlink") { runCmd("unlink"); return; }
+      if (btn.dataset.action === "hr") {
+        focusEditor();
+        document.execCommand("insertHorizontalRule");
+        updateWordCount();
+        return;
+      }
+      if (btn.dataset.action === "clearAll") {
+        if (confirm("Clear all content in the editor?")) {
+          editorEl.innerHTML = "";
+          updateWordCount();
+        }
+        return;
+      }
+
+      const cmd = btn.dataset.cmd;
+      if (!cmd) return;
+      runCmd(cmd, btn.dataset.val || null);
+    });
+
+    document.getElementById("tbFormat").addEventListener("change", e => {
+      const v = e.target.value;
+      if (!v) return;
+      runCmd("formatBlock", v);
+      e.target.value = "p";
+    });
+
+    document.getElementById("tbFontSize").addEventListener("change", e => {
+      const v = e.target.value;
+      if (!v) return;
+      runCmd("fontSize", v);
+      e.target.value = "";
+    });
+
+    document.addEventListener("click", e => {
+      if (!e.target.closest(".tb-dropdown")) closeAllDrops();
+    });
+
+    function updateToolbarState() {
+      document.querySelectorAll("#toolbar button[data-cmd]").forEach(btn => {
+        const cmd = btn.dataset.cmd;
+        if (!cmd || ["undo","redo","removeFormat","indent","outdent"].includes(cmd)) return;
+        try {
+          btn.classList.toggle("active", document.queryCommandState(cmd));
+        } catch (_) {}
+      });
+    }
+
+    editorEl.addEventListener("keyup", () => { updateWordCount(); updateToolbarState(); });
+    editorEl.addEventListener("mouseup", updateToolbarState);
+    editorEl.addEventListener("input", updateWordCount);
+
+    editorEl.addEventListener("click", e => {
+      if (e.target.classList.contains("task-check")) {
+        const li = e.target.closest("li");
+        if (li) {
+          if (e.target.checked) {
+            li.style.textDecoration = "line-through";
+            li.style.opacity = "0.65";
+          } else {
+            li.style.textDecoration = "";
+            li.style.opacity = "";
+          }
+        }
+        return;
+      }
+      // Toggle block collapse via arrow (or double-click heading)
+      const arrow = e.target.closest(".toggle-arrow");
+      if (arrow) {
+        e.preventDefault();
+        e.stopPropagation();
+        const block = arrow.closest(".toggle-block");
+        if (block) block.classList.toggle("collapsed");
+        return;
+      }
+      const heading = e.target.closest(".toggle-heading");
+      if (heading && e.detail === 2) {
+        e.preventDefault();
+        const block = heading.closest(".toggle-block");
+        if (block) block.classList.toggle("collapsed");
+      }
+    });
+
+    // Keyboard shortcuts
+    editorEl.addEventListener("keydown", e => {
+      if (!(e.ctrlKey || e.metaKey)) return;
+      const k = e.key.toLowerCase();
+      if (k === "b") { e.preventDefault(); runCmd("bold"); }
+      else if (k === "i") { e.preventDefault(); runCmd("italic"); }
+      else if (k === "u") { e.preventDefault(); runCmd("underline"); }
+    });
+
+    // ========== SERMON CRUD ==========
+    function renderSermonList() {
+      const list = document.getElementById("sermonList");
+      if (!sermons.length) {
+        list.innerHTML = `<p style="color:var(--text-muted);text-align:center;padding:1.5rem 0;font-size:0.9rem">No sermons yet.<br>Create your first one!</p>`;
+        return;
+      }
+      list.innerHTML = sermons
+        .slice()
+        .sort((a, b) => b.updated - a.updated)
+        .map(s => `
+          <div class="sermon-card" data-id="${s.id}">
+            <h4>${escapeHtml(s.title || "Untitled")}</h4>
+            <div class="sermon-meta">
+              ${s.category ? `<span class="badge">${escapeHtml(s.category)}</span>` : ""}
+              ${s.series ? `<span>${escapeHtml(s.series)}</span>` : ""}
+              <span>${new Date(s.updated).toLocaleDateString()}</span>
+            </div>
+          </div>
+        `).join("");
+      list.querySelectorAll(".sermon-card").forEach(card => {
+        card.addEventListener("click", () => loadSermon(card.dataset.id));
+      });
+    }
+
+    function escapeHtml(str) {
+      return (str || "").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+    }
+
+    function collectForm() {
+      return {
+        title: document.getElementById("sermonTitle").value.trim(),
+        theme: document.getElementById("sermonTheme").value.trim(),
+        category: document.getElementById("sermonCategory").value.trim(),
+        series: document.getElementById("sermonSeries").value.trim(),
+        scripture: document.getElementById("sermonScripture").value.trim(),
+        content: document.getElementById("editor").innerHTML,
+        updated: Date.now()
+      };
+    }
+
+    function clearForm() {
+      currentId = null;
+      document.getElementById("sermonTitle").value = "";
+      document.getElementById("sermonTheme").value = "";
+      document.getElementById("sermonCategory").value = "";
+      document.getElementById("sermonSeries").value = "";
+      document.getElementById("sermonScripture").value = "";
+      document.getElementById("editor").innerHTML = "";
+      updateWordCount();
+      setStatus("Ready • New sermon");
+    }
+
+    function loadSermon(id) {
+      const s = sermons.find(x => x.id === id);
+      if (!s) return;
+      currentId = id;
+      document.getElementById("sermonTitle").value = s.title || "";
+      document.getElementById("sermonTheme").value = s.theme || "";
+      document.getElementById("sermonCategory").value = s.category || "";
+      document.getElementById("sermonSeries").value = s.series || "";
+      document.getElementById("sermonScripture").value = s.scripture || "";
+      document.getElementById("editor").innerHTML = s.content || "";
+      updateWordCount();
+      setStatus(`Editing • ${s.title || "Untitled"}`);
+      closeSidebar();
+    }
+
+    document.getElementById("newSermonBtn").addEventListener("click", () => {
+      clearForm();
+      closeSidebar();
+      toast("New sermon ready");
+    });
+
+    document.getElementById("saveBtn").addEventListener("click", () => {
+      const data = collectForm();
+      if (!data.title && !data.content) {
+        toast("Please add a title or some content");
+        return;
+      }
+      if (currentId) {
+        const idx = sermons.findIndex(s => s.id === currentId);
+        if (idx >= 0) {
+          sermons[idx] = { ...sermons[idx], ...data };
+        }
+      } else {
+        const id = "s_" + Date.now();
+        sermons.push({ id, ...data, created: Date.now() });
+        currentId = id;
+      }
+      localStorage.setItem("teluguSermons", JSON.stringify(sermons));
+      renderSermonList();
+      toast("Sermon saved ✓");
+      // After save → go to new page (clear form)
+      setTimeout(() => {
+        clearForm();
+        toast("Ready for next sermon");
+      }, 600);
+    });
+
+    document.getElementById("clearBtn").addEventListener("click", () => {
+      if (confirm("Clear current form?")) clearForm();
+    });
+
+    const bibleCache = {}; // file -> book JSON
+
+    async function fetchBook(file) {
+      if (bibleCache[file]) return bibleCache[file];
+      const res = await fetch(BIBLE_BASE + file + ".json");
+      if (!res.ok) throw new Error("Book not found: " + file);
+      const data = await res.json();
+      bibleCache[file] = data;
+      return data;
+    }
+
+
+    // ========== BIBLE ==========
+    const chapterSelect = document.getElementById("bibleChapter");
+    const verseSelect = document.getElementById("bibleVerse");
+    let currentBookData = null;
+
+    function fillSelect(sel, items, placeholder) {
+      sel.innerHTML = "";
+      if (placeholder) {
+        const o = document.createElement("option");
+        o.value = "";
+        o.textContent = placeholder;
+        sel.appendChild(o);
+      }
+      items.forEach(({ value, label }) => {
+        const o = document.createElement("option");
+        o.value = value;
+        o.textContent = label;
+        sel.appendChild(o);
+      });
+    }
+
+    async function loadBookMeta(file) {
+      try {
+        const data = await fetchBook(file);
+        currentBookData = data;
+        const chapters = (data.chapters || []).map(c => ({
+          value: String(c.chapter),
+          label: String(c.chapter)
+        }));
+        fillSelect(chapterSelect, chapters);
+        if (chapters.length) {
+          chapterSelect.value = chapters[0].value;
+          fillVersesForChapter(chapters[0].value);
+        } else {
+          fillSelect(verseSelect, [], "All verses");
+        }
+        return data;
+      } catch (err) {
+        toast("Could not load book list");
+        throw err;
+      }
+    }
+
+    function fillVersesForChapter(ch) {
+      if (!currentBookData) {
+        fillSelect(verseSelect, [], "All verses");
+        return;
+      }
+      const chapter = currentBookData.chapters.find(c => String(c.chapter) === String(ch));
+      if (!chapter) {
+        fillSelect(verseSelect, [], "All verses");
+        return;
+      }
+      const verses = (chapter.verses || []).map(v => ({
+        value: String(v.verse),
+        label: String(v.verse)
+      }));
+      fillSelect(verseSelect, verses, "All verses");
+    }
+
+    // Selected verses (sticky selection)
+    let selectedVerses = new Map(); // key: file|ch|verse -> {file,ch,verse,text,bookName,ref}
+    let lastLoadedVerses = []; // current result set
+    let lastLoadedMeta = { file: "", bookName: "", ch: "", ref: "" };
+    let savedVerseSets = JSON.parse(localStorage.getItem("savedVerseSets") || "[]");
+
+    function verseKey(file, ch, v) {
+      return `${file}|${ch}|${v}`;
+    }
+
+    function updateVerseSelUI() {
+      const bar = document.getElementById("verseActionBar");
+      const count = selectedVerses.size;
+      if (lastLoadedVerses.length || count) {
+        bar.style.display = "flex";
+      } else {
+        bar.style.display = "none";
+      }
+      document.getElementById("verseSelCount").textContent =
+        count ? `${count} verse${count > 1 ? "s" : ""} selected` : "Click verses to select · selection stays glued";
+      // paint selected class without losing sticky state
+      document.querySelectorAll(".verse-line[data-vkey]").forEach(el => {
+        el.classList.toggle("selected", selectedVerses.has(el.dataset.vkey));
+      });
+    }
+
+    function renderVerseResults(ref, verses, file, bookName, ch) {
+      const resultEl = document.getElementById("bibleResult");
+      lastLoadedVerses = verses.map(v => ({
+        file, bookName, ch: String(ch), verse: String(v.verse), text: v.text
+      }));
+      lastLoadedMeta = { file, bookName, ch: String(ch), ref };
+      lastBibleText = verses.map(v => `${v.verse}. ${v.text}`).join("\n");
+
+      resultEl.innerHTML = `
+        <div style="font-weight:600;margin-bottom:0.7rem;color:var(--accent)">${escapeHtml(ref)}</div>
+        ${verses.map(v => {
+          const key = verseKey(file, ch, v.verse);
+          const sel = selectedVerses.has(key) ? " selected" : "";
+          return `<div class="verse-line${sel}" data-vkey="${key}" data-file="${file}" data-ch="${ch}" data-verse="${v.verse}">
+            <span class="verse-num">${v.verse}</span><span class="verse-text">${escapeHtml(v.text)}</span>
+          </div>`;
+        }).join("")}
+      `;
+
+      document.getElementById("insertScriptureBtn").dataset.ref = ref;
+      document.getElementById("insertRefOnlyBtn").dataset.ref = ref;
+      updateVerseSelUI();
+    }
+
+    // Click to toggle selection — stays glued until cleared
+    document.getElementById("bibleResult").addEventListener("click", e => {
+      const line = e.target.closest(".verse-line[data-vkey]");
+      if (!line || e.target.classList.contains("verse-edit-input")) return;
+      if (line.classList.contains("editing")) return;
+
+      const key = line.dataset.vkey;
+      if (selectedVerses.has(key)) {
+        selectedVerses.delete(key);
+      } else {
+        const textEl = line.querySelector(".verse-text");
+        selectedVerses.set(key, {
+          file: line.dataset.file,
+          ch: line.dataset.ch,
+          verse: line.dataset.verse,
+          text: textEl ? textEl.textContent : "",
+          bookName: lastLoadedMeta.bookName,
+          ref: `${lastLoadedMeta.bookName} ${line.dataset.ch}:${line.dataset.verse}`
+        });
+      }
+      line.classList.toggle("selected", selectedVerses.has(key));
+      updateVerseSelUI();
+    });
+
+    async function loadBible(file, ch, verseStr = "") {
+      const resultEl = document.getElementById("bibleResult");
+      resultEl.innerHTML = `<p style="text-align:center;color:var(--text-muted)">Loading…</p>`;
+      document.getElementById("verseActionBar").style.display = "none";
+
+      try {
+        const data = await fetchBook(file);
+        currentBookData = data;
+        const chapters = (data.chapters || []).map(c => ({
+          value: String(c.chapter),
+          label: String(c.chapter)
+        }));
+        fillSelect(chapterSelect, chapters);
+        chapterSelect.value = String(ch);
+
+        const chapter = data.chapters.find(c => String(c.chapter) === String(ch));
+        if (!chapter) {
+          resultEl.innerHTML = `<p style="color:var(--accent2)">Chapter ${ch} not found in this book.</p>`;
+          return;
+        }
+
+        fillVersesForChapter(ch);
+
+        let verses = chapter.verses;
+        if (verseStr) {
+          if (verseStr.includes("-")) {
+            const [a, b] = verseStr.split("-").map(n => parseInt(n.trim()));
+            verses = verses.filter(v => {
+              const n = parseInt(v.verse);
+              return n >= a && n <= b;
+            });
+          } else {
+            verses = verses.filter(v => String(v.verse) === String(verseStr.trim()));
+            verseSelect.value = String(verseStr.trim());
+          }
+        } else {
+          verseSelect.value = "";
+        }
+
+        if (!verses.length) {
+          resultEl.innerHTML = `<p style="color:var(--accent2)">No verses matched.</p>`;
+          return;
+        }
+
+        const bookName = data.book?.telugu || data.book?.english || file;
+        const ref = verseStr
+          ? `${bookName} ${ch}:${verseStr}`
+          : `${bookName} ${ch}`;
+
+        bookSelect.value = file;
+        renderVerseResults(ref, verses, file, bookName, ch);
+      } catch (err) {
+        resultEl.innerHTML = `<p style="color:var(--accent2)">Could not load Bible text. Check internet connection.<br><small>${err.message}</small></p>`;
+      }
+    }
+
+    bookSelect.addEventListener("change", async () => {
+      try {
+        await loadBookMeta(bookSelect.value);
+      } catch (_) {}
+    });
+
+    chapterSelect.addEventListener("change", () => {
+      fillVersesForChapter(chapterSelect.value);
+    });
+
+    document.getElementById("searchBibleBtn").addEventListener("click", () => {
+      const file = bookSelect.value;
+      const ch = parseInt(chapterSelect.value) || 1;
+      const verseStr = verseSelect.value.trim();
+      loadBible(file, ch, verseStr);
+    });
+
+    document.getElementById("loadVerseRangeBtn").addEventListener("click", () => {
+      const file = bookSelect.value;
+      const ch = parseInt(chapterSelect.value) || 1;
+      const range = document.getElementById("bibleVerseRange").value.trim();
+      if (!range) {
+        toast("Enter a range like 1-5");
+        return;
+      }
+      loadBible(file, ch, range);
+    });
+
+    document.getElementById("prevChapterBtn").addEventListener("click", () => {
+      const opts = Array.from(chapterSelect.options).map(o => o.value).filter(Boolean);
+      const idx = opts.indexOf(chapterSelect.value);
+      if (idx > 0) {
+        chapterSelect.value = opts[idx - 1];
+        fillVersesForChapter(chapterSelect.value);
+        loadBible(bookSelect.value, parseInt(chapterSelect.value));
+      }
+    });
+
+    document.getElementById("nextChapterBtn").addEventListener("click", () => {
+      const opts = Array.from(chapterSelect.options).map(o => o.value).filter(Boolean);
+      const idx = opts.indexOf(chapterSelect.value);
+      if (idx >= 0 && idx < opts.length - 1) {
+        chapterSelect.value = opts[idx + 1];
+        fillVersesForChapter(chapterSelect.value);
+        loadBible(bookSelect.value, parseInt(chapterSelect.value));
+      }
+    });
+
+    loadBookMeta(bookSelect.value).catch(() => {});
+
+    // Paste selected (or all shown) verses into notepad
+    document.getElementById("pasteToNotepadBtn").addEventListener("click", () => {
+      let items = Array.from(selectedVerses.values());
+      if (!items.length) {
+        // paste all currently shown
+        items = lastLoadedVerses.map(v => ({
+          ...v,
+          ref: `${v.bookName} ${v.ch}:${v.verse}`
+        }));
+      }
+      if (!items.length) {
+        toast("No verses to paste");
+        return;
+      }
+      // sort by chapter/verse if same book
+      items.sort((a, b) => {
+        if (a.file !== b.file) return 0;
+        const c = parseInt(a.ch) - parseInt(b.ch);
+        return c || (parseInt(a.verse) - parseInt(b.verse));
+      });
+      const block = items.map(v =>
+        `<p><strong>${escapeHtml(v.ref || (v.bookName + " " + v.ch + ":" + v.verse))}</strong> — ${escapeHtml(v.text)}</p>`
+      ).join("");
+      focusEditor();
+      document.execCommand("insertHTML", false, block + "<p><br></p>");
+      toast(`Pasted ${items.length} verse${items.length > 1 ? "s" : ""} to notepad`);
+    });
+
+    // Edit selected verse text (single selection preferred)
+    document.getElementById("editSelectedVerseBtn").addEventListener("click", () => {
+      if (selectedVerses.size === 0) {
+        toast("Select a verse first");
+        return;
+      }
+      if (selectedVerses.size > 1) {
+        toast("Select only one verse to edit");
+        return;
+      }
+      const [key, data] = selectedVerses.entries().next().value;
+      const line = document.querySelector(`.verse-line[data-vkey="${CSS.escape(key)}"]`);
+      if (!line) {
+        toast("Scroll to the selected verse in results");
+        return;
+      }
+      if (line.classList.contains("editing")) return;
+      line.classList.add("editing");
+      const textSpan = line.querySelector(".verse-text");
+      const current = textSpan ? textSpan.textContent : data.text;
+      const ta = document.createElement("textarea");
+      ta.className = "verse-edit-input";
+      ta.value = current;
+      line.appendChild(ta);
+      ta.focus();
+      ta.addEventListener("keydown", ev => {
+        if (ev.key === "Escape") {
+          line.classList.remove("editing");
+          ta.remove();
+        }
+        if (ev.key === "Enter" && (ev.ctrlKey || ev.metaKey)) {
+          ev.preventDefault();
+          finishEdit();
+        }
+      });
+      function finishEdit() {
+        const newText = ta.value.trim();
+        if (textSpan) textSpan.textContent = newText;
+        data.text = newText;
+        selectedVerses.set(key, data);
+        // update lastLoadedVerses copy
+        lastLoadedVerses = lastLoadedVerses.map(v =>
+          verseKey(v.file, v.ch, v.verse) === key ? { ...v, text: newText } : v
+        );
+        lastBibleText = lastLoadedVerses.map(v => `${v.verse}. ${v.text}`).join("\n");
+        line.classList.remove("editing");
+        ta.remove();
+        toast("Verse text updated (local)");
+        updateVerseSelUI();
+      }
+      ta.addEventListener("blur", () => {
+        if (line.contains(ta)) finishEdit();
+      });
+    });
+
+    // Save selected verses to local library
+    document.getElementById("saveSelectedVersesBtn").addEventListener("click", () => {
+      let items = Array.from(selectedVerses.values());
+      if (!items.length) {
+        toast("Select verses to save");
+        return;
+      }
+      const label = prompt("Name this verse set:", items[0].ref || "My verses");
+      if (label === null) return;
+      const entry = {
+        id: "vs_" + Date.now(),
+        name: label.trim() || "Saved verses",
+        verses: items,
+        savedAt: Date.now()
+      };
+      savedVerseSets.unshift(entry);
+      localStorage.setItem("savedVerseSets", JSON.stringify(savedVerseSets));
+      toast(`Saved “${entry.name}” (${items.length} verses)`);
+    });
+
+    document.getElementById("clearVerseSelBtn").addEventListener("click", () => {
+      selectedVerses.clear();
+      document.querySelectorAll(".verse-line.selected").forEach(el => el.classList.remove("selected"));
+      updateVerseSelUI();
+      toast("Selection cleared");
+    });
+
+    document.getElementById("insertScriptureBtn").addEventListener("click", () => {
+      const ref = document.getElementById("insertScriptureBtn").dataset.ref || lastLoadedMeta.ref || "";
+      document.getElementById("sermonScripture").value = ref;
+      const text = lastBibleText || Array.from(selectedVerses.values()).map(v => `${v.verse}. ${v.text}`).join("\n");
+      const quote = `<blockquote><strong>${escapeHtml(ref)}</strong><br>${escapeHtml(text).replace(/\n/g, "<br>")}</blockquote><p><br></p>`;
+      focusEditor();
+      document.execCommand("insertHTML", false, quote);
+      toast("Scripture inserted");
+    });
+
+    document.getElementById("insertRefOnlyBtn").addEventListener("click", () => {
+      const ref = document.getElementById("insertRefOnlyBtn").dataset.ref || lastLoadedMeta.ref || "";
+      document.getElementById("sermonScripture").value = ref;
+      toast("Reference only set");
+    });
+
+    // ========== BIBLE SEARCH MODES (Word / Sentence / Relative) ==========
+    const modeHints = {
+      word: "Finds verses containing the word (partial match OK).",
+      phrase: "Finds verses containing the exact phrase / sentence.",
+      relative: "Finds matches and shows surrounding verses for context."
+    };
+    const modeLabels = {
+      word: "Word / keyword",
+      phrase: "Phrase / sentence",
+      relative: "Word or phrase"
+    };
+
+    const BIBLE_THEMES = [
+      { id: "love", name: "Love of God", keywords: ["ప్రేమ", "ప్రేమించెను", "ప్రేమించును"] },
+      { id: "faith", name: "Faith", keywords: ["విశ్వాసము", "విశ్వసించు", "నమ్మకము"] },
+      { id: "grace", name: "Grace", keywords: ["కృప", "దయ"] },
+      { id: "salvation", name: "Salvation", keywords: ["రక్షణ", "రక్షించు", "రక్షించబడ"] },
+      { id: "prayer", name: "Prayer", keywords: ["ప్రార్థన", "ప్రార్థించు", "వేడుకొను"] },
+      { id: "hope", name: "Hope", keywords: ["నిరీక్షణ", "ఆశ"] },
+      { id: "peace", name: "Peace", keywords: ["సమాధానము", "శాంతి"] },
+      { id: "wisdom", name: "Wisdom", keywords: ["జ్ఞానము", "వివేకము"] },
+      { id: "forgiveness", name: "Forgiveness", keywords: ["క్షమ", "క్షమించు", "పాపక్షమాపణ"] },
+      { id: "holy_spirit", name: "Holy Spirit", keywords: ["పరిశుద్ధాత్మ", "ఆత్మ"] },
+      { id: "cross", name: "Cross & Christ", keywords: ["సిలువ", "క్రీస్తు", "యేసు"] },
+      { id: "repentance", name: "Repentance", keywords: ["మనస్సు మార్చుకొను", "పశ్చాత్తాపము"] },
+      { id: "worship", name: "Worship", keywords: ["ఆరాధన", "స్తుతి", "ఆరాధించు"] },
+      { id: "family", name: "Family", keywords: ["తండ్రి", "తల్లి", "పిల్లలు", "భార్య"] },
+      { id: "strength", name: "Strength", keywords: ["బలము", "శక్తి", "ధైర్యము"] }
+    ];
+
+    const themeSelect = document.getElementById("bibleThemeSelect");
+    BIBLE_THEMES.forEach(t => {
+      const o = document.createElement("option");
+      o.value = t.id;
+      o.textContent = t.name;
+      themeSelect.appendChild(o);
+    });
+
+    document.querySelectorAll(".bible-mode").forEach(btn => {
+      btn.addEventListener("click", () => {
+        document.querySelectorAll(".bible-mode").forEach(b => b.classList.remove("active"));
+        btn.classList.add("active");
+        bibleMode = btn.dataset.mode;
+        const isRef = bibleMode === "ref";
+        const isThemes = bibleMode === "themes";
+        const isText = !isRef && !isThemes;
+        document.getElementById("bibleRefControls").style.display = isRef ? "block" : "none";
+        document.getElementById("bibleTextSearchControls").style.display = isText ? "block" : "none";
+        document.getElementById("bibleThemesControls").style.display = isThemes ? "block" : "none";
+        if (isText) {
+          document.getElementById("bibleSearchLabel").textContent = modeLabels[bibleMode] || "Word / keyword";
+          document.getElementById("bibleModeHint").textContent = modeHints[bibleMode] || "";
+          document.getElementById("relativeContextWrap").style.display =
+            bibleMode === "relative" ? "block" : "none";
+          searchBookSelect.value = bookSelect.value;
+        }
+      });
+    });
+
+    document.getElementById("bibleThemeSearchBtn").addEventListener("click", async () => {
+      const theme = BIBLE_THEMES.find(t => t.id === themeSelect.value);
+      if (!theme) return;
+      const resultEl = document.getElementById("bibleResult");
+      resultEl.innerHTML = `<p style="text-align:center;color:var(--text-muted)">Searching theme “${escapeHtml(theme.name)}”… <span id="themeProg">0/${BOOKS.length}</span></p>`;
+      document.getElementById("verseActionBar").style.display = "none";
+
+      const matches = [];
+      let done = 0;
+      for (const b of BOOKS) {
+        try {
+          const data = await fetchBook(b.file);
+          data._file = b.file;
+          const bookName = data.book?.telugu || data.book?.english || b.en;
+          (data.chapters || []).forEach(ch => {
+            (ch.verses || []).forEach(v => {
+              const hay = (v.text || "").toLowerCase();
+              if (theme.keywords.some(kw => hay.includes(kw.toLowerCase()))) {
+                matches.push({
+                  file: b.file,
+                  bookName,
+                  chapter: ch.chapter,
+                  verse: v.verse,
+                  text: v.text,
+                  verseIdx: 0,
+                  allVerses: ch.verses
+                });
+              }
+            });
+          });
+        } catch (_) {}
+        done++;
+        const p = document.getElementById("themeProg");
+        if (p) p.textContent = `${done}/${BOOKS.length} · ${matches.length} hits`;
+        if (matches.length >= 120) break;
+      }
+
+      if (!matches.length) {
+        resultEl.innerHTML = `<p style="color:var(--accent2);text-align:center">No verses found for “${escapeHtml(theme.name)}”.</p>`;
+        return;
+      }
+
+      // render as selectable verse lines grouped
+      lastLoadedVerses = matches.slice(0, 80).map(m => ({
+        file: m.file,
+        bookName: m.bookName,
+        ch: String(m.chapter),
+        verse: String(m.verse),
+        text: m.text
+      }));
+      lastLoadedMeta = { file: "", bookName: theme.name, ch: "", ref: `Theme: ${theme.name}` };
+      lastBibleText = lastLoadedVerses.map(v => `${v.bookName} ${v.ch}:${v.verse}. ${v.text}`).join("\n");
+
+      resultEl.innerHTML = `
+        <div style="font-weight:600;margin-bottom:0.7rem;color:var(--accent)">Theme: ${escapeHtml(theme.name)} · ${matches.length} matches</div>
+        ${lastLoadedVerses.map(v => {
+          const key = verseKey(v.file, v.ch, v.verse);
+          const sel = selectedVerses.has(key) ? " selected" : "";
+          return `<div class="verse-line${sel}" data-vkey="${key}" data-file="${v.file}" data-ch="${v.ch}" data-verse="${v.verse}">
+            <div style="font-size:0.75rem;color:var(--accent);margin-bottom:0.15rem">${escapeHtml(v.bookName)} ${v.ch}:${v.verse}</div>
+            <span class="verse-text">${escapeHtml(v.text)}</span>
+          </div>`;
+        }).join("")}
+        ${matches.length > 80 ? `<p style="font-size:0.75rem;color:var(--text-muted);text-align:center">Showing 80 of ${matches.length}</p>` : ""}
+      `;
+      document.getElementById("insertScriptureBtn").dataset.ref = `Theme: ${theme.name}`;
+      document.getElementById("insertRefOnlyBtn").dataset.ref = `Theme: ${theme.name}`;
+      updateVerseSelUI();
+    });
+
+    function highlightTerm(text, term, exactPhrase) {
+      if (!term) return escapeHtml(text);
+      const escaped = term.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+      const flags = "gi";
+      const re = exactPhrase
+        ? new RegExp(escaped, flags)
+        : new RegExp(escaped, flags);
+      return escapeHtml(text).replace(re, m => `<span class="search-hit">${m}</span>`);
+    }
+
+    function collectMatchesFromBook(data, termLower, exactPhrase, scope, currentCh) {
+      const bookName = data.book?.telugu || data.book?.english || data.book?.en || "";
+      const fileHint = data._file || "";
+      let chapters = data.chapters || [];
+      if (scope === "chapter") {
+        chapters = chapters.filter(c => String(c.chapter) === String(currentCh));
+      }
+      const matches = [];
+      chapters.forEach(ch => {
+        (ch.verses || []).forEach((v, idx) => {
+          const text = v.text || "";
+          const hay = text.toLowerCase();
+          if (hay.includes(termLower)) {
+            matches.push({
+              bookName,
+              file: fileHint,
+              chapter: ch.chapter,
+              verse: v.verse,
+              text,
+              verseIdx: idx,
+              allVerses: ch.verses
+            });
+          }
+        });
+      });
+      return matches;
+    }
+
+    async function runTextSearch() {
+      const file = searchBookSelect.value;
+      const term = document.getElementById("bibleSearchTerm").value.trim();
+      const scope = document.getElementById("bibleSearchScope").value;
+      const ctxN = parseInt(document.getElementById("bibleRelativeContext").value) || 2;
+      const resultEl = document.getElementById("bibleResult");
+      const exactPhrase = bibleMode === "phrase";
+      const currentCh = parseInt(document.getElementById("bibleChapter").value) || 1;
+
+      if (!term) {
+        toast("Enter a word or phrase to search");
+        return;
+      }
+
+      document.getElementById("insertScriptureBtn").style.display = "none";
+      document.getElementById("insertRefOnlyBtn").style.display = "none";
+
+      const termLower = term.toLowerCase();
+      const matches = [];
+      const MAX_SHOW = 100;
+
+      try {
+        if (scope === "bible") {
+          // Whole Bible – scan all 66 books with progress
+          resultEl.innerHTML = `<p style="text-align:center;color:var(--text-muted)">Searching whole Bible… <span id="bibleSearchProgress">0 / ${BOOKS.length}</span></p>`;
+          let done = 0;
+          for (const b of BOOKS) {
+            try {
+              const data = await fetchBook(b.file);
+              data._file = b.file;
+              const found = collectMatchesFromBook(data, termLower, exactPhrase, "book", currentCh);
+              matches.push(...found);
+              done++;
+              const prog = document.getElementById("bibleSearchProgress");
+              if (prog) prog.textContent = `${done} / ${BOOKS.length} · ${matches.length} hits`;
+              // stop early if we already have plenty
+              if (matches.length >= 300) break;
+            } catch (_) {
+              done++;
+            }
+          }
+        } else {
+          resultEl.innerHTML = `<p style="text-align:center;color:var(--text-muted)">Searching…</p>`;
+          const data = await fetchBook(file);
+          data._file = file;
+          lastBibleData = data;
+          const found = collectMatchesFromBook(data, termLower, exactPhrase, scope, currentCh);
+          matches.push(...found);
+        }
+
+        lastSearchMatches = matches;
+
+        if (!matches.length) {
+          const where = scope === "bible" ? "the whole Bible" : scope === "chapter" ? "this chapter" : "this book";
+          resultEl.innerHTML = `<p style="color:var(--accent2);text-align:center">No matches for “${escapeHtml(term)}” in ${where}.</p>`;
+          return;
+        }
+
+        let html = `<div style="font-weight:600;margin-bottom:0.6rem;color:var(--accent)">${matches.length} match${matches.length > 1 ? "es" : ""} for “${escapeHtml(term)}”${scope === "bible" ? " (whole Bible)" : ""}</div>`;
+
+        matches.slice(0, MAX_SHOW).forEach((m, i) => {
+          const ref = `${m.bookName} ${m.chapter}:${m.verse}`;
+          let body = "";
+          if (bibleMode === "relative") {
+            const start = Math.max(0, m.verseIdx - ctxN);
+            const end = Math.min(m.allVerses.length - 1, m.verseIdx + ctxN);
+            const parts = [];
+            for (let j = start; j <= end; j++) {
+              const vv = m.allVerses[j];
+              const isHit = j === m.verseIdx;
+              const t = highlightTerm(vv.text, term, exactPhrase);
+              parts.push(`<span class="${isHit ? "hit-verse" : ""}"><span class="verse-num">${vv.verse}</span>${t}</span>`);
+            }
+            body = parts.join(" ");
+          } else {
+            body = `<span class="verse-num">${m.verse}</span>${highlightTerm(m.text, term, exactPhrase)}`;
+          }
+          html += `
+            <div class="search-match-card" data-idx="${i}" data-file="${m.file}" data-ch="${m.chapter}" data-v="${m.verse}">
+              <div class="ref">${ref}</div>
+              <div class="ctx">${body}</div>
+            </div>`;
+        });
+
+        if (matches.length > MAX_SHOW) {
+          html += `<p style="font-size:0.78rem;color:var(--text-muted);text-align:center">Showing first ${MAX_SHOW} of ${matches.length}</p>`;
+        }
+
+        resultEl.innerHTML = html;
+
+        resultEl.querySelectorAll(".search-match-card").forEach(card => {
+          card.addEventListener("click", () => {
+            const ch = card.dataset.ch;
+            const v = card.dataset.v;
+            const f = card.dataset.file;
+            const m = matches[parseInt(card.dataset.idx)];
+            lastBibleText = m.text;
+            const ref = `${m.bookName} ${ch}:${v}`;
+            document.getElementById("insertScriptureBtn").style.display = "inline-flex";
+            document.getElementById("insertRefOnlyBtn").style.display = "inline-flex";
+            document.getElementById("insertScriptureBtn").dataset.ref = ref;
+            document.getElementById("insertRefOnlyBtn").dataset.ref = ref;
+            if (f) {
+              bookSelect.value = f;
+              searchBookSelect.value = f;
+              loadBible(f, parseInt(ch), String(v));
+            } else {
+              document.getElementById("bibleChapter").value = ch;
+              document.getElementById("bibleVerse").value = v;
+            }
+            toast(`Selected ${ref}`);
+          });
+        });
+      } catch (err) {
+        resultEl.innerHTML = `<p style="color:var(--accent2)">Search failed. Check connection.<br><small>${err.message}</small></p>`;
+      }
+    }
+
+    document.getElementById("bibleTextSearchBtn").addEventListener("click", runTextSearch);
+    document.getElementById("bibleSearchTerm").addEventListener("keydown", e => {
+      if (e.key === "Enter") runTextSearch();
+    });
+
+    document.getElementById("bibleSearchScope").addEventListener("change", () => {
+      const scope = document.getElementById("bibleSearchScope").value;
+      const hint = document.getElementById("bibleModeHint");
+      if (scope === "bible") {
+        hint.textContent = "Searches all 66 books. First run may take 15–40s; results are cached afterward.";
+      } else {
+        hint.textContent = modeHints[bibleMode] || modeHints.word;
+      }
+    });
+
+    // ========== PREACHER / PRESENTER ==========
+    function buildSlides() {
+      slides = [];
+      const title = document.getElementById("sermonTitle").value.trim() || "Sermon";
+      const theme = document.getElementById("sermonTheme").value.trim();
+      const scripture = document.getElementById("sermonScripture").value.trim();
+
+      // Title slide
+      slides.push({
+        title: title,
+        content: (theme ? theme.replace(/\n/g, "<br>") : "") +
+                 (scripture ? `<div style="margin-top:1.2rem;font-size:0.9em;opacity:0.85">${scripture}</div>` : "")
+      });
+
+      // Parse editor content into slides (h1/h2/h3 or list items / paragraphs)
+      const editor = document.getElementById("editor");
+      const nodes = Array.from(editor.childNodes);
+      let buffer = [];
+
+      function flushBuffer() {
+        if (buffer.length) {
+          const html = buffer.join("");
+          if (html.replace(/<[^>]+>/g, "").trim()) {
+            slides.push({ title: "", content: html });
+          }
+          buffer = [];
+        }
+      }
+
+      nodes.forEach(node => {
+        if (node.nodeType === 1) {
+          const tag = node.tagName;
+          if (["H1", "H2", "H3"].includes(tag)) {
+            flushBuffer();
+            slides.push({ title: node.innerText, content: "" });
+          } else if (tag === "UL" || tag === "OL") {
+            flushBuffer();
+            Array.from(node.children).forEach(li => {
+              slides.push({ title: "", content: li.innerHTML });
+            });
+          } else if (tag === "BLOCKQUOTE") {
+            flushBuffer();
+            slides.push({ title: "📜 Scripture", content: node.innerHTML });
+          } else {
+            buffer.push(node.outerHTML);
+          }
+        } else if (node.nodeType === 3 && node.textContent.trim()) {
+          buffer.push(`<p>${node.textContent}</p>`);
+        }
+      });
+      flushBuffer();
+
+      if (slides.length === 1 && !theme && !scripture) {
+        // fallback: whole content as one slide
+        slides[0].content = editor.innerHTML || "No content";
+      }
+    }
+
+    function showSlide(idx) {
+      currentSlide = Math.max(0, Math.min(idx, slides.length - 1));
+      const body = document.getElementById("presenterBody");
+      body.innerHTML = "";
+      slides.forEach((s, i) => {
+        const div = document.createElement("div");
+        div.className = "slide" + (i === currentSlide ? " active" : "");
+        div.innerHTML = `
+          ${s.title ? `<h2>${s.title}</h2>` : ""}
+          <div class="content">${s.content || ""}</div>
+        `;
+        body.appendChild(div);
+      });
+      document.getElementById("slideCounter").textContent = `${currentSlide + 1} / ${slides.length}`;
+      document.getElementById("presenterTitle").textContent =
+        document.getElementById("sermonTitle").value || "Sermon";
+    }
+
+    document.getElementById("preachBtn").addEventListener("click", () => {
+      buildSlides();
+      if (!slides.length) {
+        toast("Add some content first");
+        return;
+      }
+      document.getElementById("presenter").classList.add("active");
+      showSlide(0);
+    });
+
+    document.getElementById("exitPresenter").addEventListener("click", () => {
+      document.getElementById("presenter").classList.remove("active");
+    });
+    document.getElementById("prevSlide").addEventListener("click", () => showSlide(currentSlide - 1));
+    document.getElementById("nextSlide").addEventListener("click", () => showSlide(currentSlide + 1));
+
+    document.addEventListener("keydown", e => {
+      if (!document.getElementById("presenter").classList.contains("active")) return;
+      if (e.key === "Escape") document.getElementById("presenter").classList.remove("active");
+      if (e.key === "ArrowRight" || e.key === " " || e.key === "PageDown") {
+        e.preventDefault();
+        showSlide(currentSlide + 1);
+      }
+      if (e.key === "ArrowLeft" || e.key === "PageUp") {
+        e.preventDefault();
+        showSlide(currentSlide - 1);
+      }
+    });
+
+    // ========== EXPORT ==========
+    function getExportHtml() {
+      const d = collectForm();
+      return `
+<!DOCTYPE html><html><head><meta charset="UTF-8"><title>${escapeHtml(d.title)}</title>
+<style>
+  body{font-family:'Noto Sans Telugu',Georgia,serif;max-width:720px;margin:2rem auto;padding:0 1.5rem;line-height:1.7;color:#222}
+  h1{font-size:1.8rem;margin-bottom:0.3rem}
+  .meta{color:#555;margin-bottom:1.5rem;font-size:0.95rem}
+  .theme{font-style:italic;margin:0.8rem 0;white-space:pre-line}
+  blockquote{border-left:3px solid #4f8cff;padding:0.5rem 1rem;background:#f5f8ff;margin:1rem 0}
+</style></head><body>
+  <h1>${escapeHtml(d.title) || "Untitled Sermon"}</h1>
+  <div class="meta">
+    ${d.scripture ? `<strong>Scripture:</strong> ${escapeHtml(d.scripture)}<br>` : ""}
+    ${d.category ? `<strong>Category:</strong> ${escapeHtml(d.category)} · ` : ""}
+    ${d.series ? `<strong>Series:</strong> ${escapeHtml(d.series)}` : ""}
+  </div>
+  ${d.theme ? `<div class="theme">${escapeHtml(d.theme).replace(/\n/g,"<br>")}</div>` : ""}
+  <hr>
+  <div>${d.content}</div>
+</body></html>`;
+    }
+
+    document.getElementById("exportPdfBtn").addEventListener("click", () => {
+      const html = getExportHtml();
+      const w = window.open("", "_blank");
+      w.document.write(html);
+      w.document.close();
+      setTimeout(() => { w.print(); }, 400);
+      toast("PDF print dialog opened");
+    });
+
+    document.getElementById("exportDocBtn").addEventListener("click", () => {
+      const html = getExportHtml();
+      const blob = new Blob(["\ufeff" + html], { type: "application/msword" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = (document.getElementById("sermonTitle").value || "sermon").replace(/[^\w\u0C00-\u0C7F]+/g, "_") + ".doc";
+      a.click();
+      URL.revokeObjectURL(url);
+      toast("DOC downloaded");
+    });
+
+    // ========== BACKUP / RESTORE ==========
+    async function performBackup() {
+      const data = {
+        version: 1,
+        exported: new Date().toISOString(),
+        sermons
+      };
+      const json = JSON.stringify(data, null, 2);
+      const filename = `sermon-notepad-backup-${new Date().toISOString().slice(0,10)}.json`;
+
+      // Prefer File System Access API so user can pick exact folder
+      if (window.showSaveFilePicker) {
+        try {
+          const handle = await window.showSaveFilePicker({
+            suggestedName: filename,
+            types: [{ description: "JSON Backup", accept: { "application/json": [".json"] } }]
+          });
+          const writable = await handle.createWritable();
+          await writable.write(json);
+          await writable.close();
+          toast("Backup saved to chosen location ✓");
+          document.getElementById("backupModal").classList.remove("active");
+          return;
+        } catch (err) {
+          if (err.name === "AbortError") {
+            toast("Backup cancelled");
+            document.getElementById("backupModal").classList.remove("active");
+            return;
+          }
+          // fall through to download
+        }
+      }
+
+      // Fallback: normal download (browser asks for location / Downloads)
+      const blob = new Blob([json], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = filename;
+      a.click();
+      URL.revokeObjectURL(url);
+      toast("Backup started — choose location in the browser dialog");
+      document.getElementById("backupModal").classList.remove("active");
+    }
+
+    document.getElementById("backupBtn").addEventListener("click", () => {
+      document.getElementById("backupModal").classList.add("active");
+    });
+    document.getElementById("cancelBackup").addEventListener("click", () => {
+      document.getElementById("backupModal").classList.remove("active");
+    });
+    document.getElementById("confirmBackup").addEventListener("click", performBackup);
+
+    document.getElementById("restoreBtn").addEventListener("click", () => {
+      document.getElementById("restoreModal").classList.add("active");
+    });
+    document.getElementById("cancelRestore").addEventListener("click", () => {
+      document.getElementById("restoreModal").classList.remove("active");
+    });
+    document.getElementById("confirmRestore").addEventListener("click", () => {
+      const file = document.getElementById("restoreFile").files[0];
+      if (!file) { toast("Please choose a backup file first"); return; }
+      const reader = new FileReader();
+      reader.onload = e => {
+        try {
+          const data = JSON.parse(e.target.result);
+          if (!Array.isArray(data.sermons)) throw new Error("Invalid backup format");
+          if (!confirm(`Restore ${data.sermons.length} sermon(s)?\n\nThis will replace all current sermons.`)) return;
+          sermons = data.sermons;
+          localStorage.setItem("teluguSermons", JSON.stringify(sermons));
+          renderSermonList();
+          clearForm();
+          document.getElementById("restoreModal").classList.remove("active");
+          document.getElementById("restoreFile").value = "";
+          toast("Restored successfully ✓");
+        } catch (err) {
+          toast("Invalid backup file");
+        }
+      };
+      reader.readAsText(file);
+    });
+
+
+    // ========== PWA INSTALL ==========
+    (function setupPWA() {
+      const manifest = {
+        name: "Sermon Notepad",
+        short_name: "SermonPad",
+        description: "Sermon Notepad with Telugu Bible",
+        start_url: ".",
+        display: "standalone",
+        background_color: "#0f0f1a",
+        theme_color: "#1a1a2e",
+        orientation: "any",
+        icons: [
+          {
+            src: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 128 128'%3E%3Crect width='128' height='128' rx='28' fill='%231a1a2e'/%3E%3Ctext x='64' y='84' text-anchor='middle' font-size='72' fill='%234f8cff'%3E%E2%9C%9D%3C/text%3E%3C/svg%3E",
+            sizes: "128x128",
+            type: "image/svg+xml",
+            purpose: "any maskable"
+          }
+        ]
+      };
+      const blob = new Blob([JSON.stringify(manifest)], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const link = document.getElementById("appManifest");
+      if (link) link.href = url;
+
+      // Register a minimal service worker for installability / offline shell
+      if ("serviceWorker" in navigator) {
+        const swCode = `
+          const CACHE = "sermon-notepad-v1";
+          self.addEventListener("install", e => {
+            self.skipWaiting();
+            e.waitUntil(caches.open(CACHE).then(c => c.addAll([])));
+          });
+          self.addEventListener("activate", e => {
+            e.waitUntil(self.clients.claim());
+          });
+          self.addEventListener("fetch", e => {
+            e.respondWith(
+              fetch(e.request).catch(() => caches.match(e.request))
+            );
+          });
+        `;
+        const swBlob = new Blob([swCode], { type: "text/javascript" });
+        const swUrl = URL.createObjectURL(swBlob);
+        navigator.serviceWorker.register(swUrl).catch(() => {});
+      }
+
+      let deferredPrompt = null;
+      window.addEventListener("beforeinstallprompt", e => {
+        e.preventDefault();
+        deferredPrompt = e;
+        const btn = document.getElementById("installAppBtn");
+        if (btn) btn.style.display = "inline-flex";
+      });
+      const installBtn = document.getElementById("installAppBtn");
+      if (installBtn) {
+        installBtn.addEventListener("click", async () => {
+          if (!deferredPrompt) {
+            toast("On iPhone: Share → Add to Home Screen. On Android: browser menu → Install app.");
+            return;
+          }
+          deferredPrompt.prompt();
+          await deferredPrompt.userChoice;
+          deferredPrompt = null;
+          installBtn.style.display = "none";
+        });
+      }
+    })();
+
+    // ========== START ==========
+    renderSermonList();
+    updateWordCount();
+  </script>
+</body>
+</html>
